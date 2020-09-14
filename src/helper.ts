@@ -29,6 +29,20 @@ export const includeTopLevel = (name: string): boolean => {
     return !!config.include[name];
 };
 
+export const includeSecondLEvel = (topLevelName: string, secondLevelName: string): boolean => {
+    if (!config.include[topLevelName]) {
+        return false;
+    }
+    const secondLevelFilter = config.include[topLevelName];
+    if (secondLevelFilter.exclude && secondLevelFilter.exclude.indexOf(secondLevelName) !== -1) {
+        return false;
+    }
+    if (secondLevelFilter.include && secondLevelFilter.include.indexOf(secondLevelName) === -1) {
+        return false;
+    }
+    return true;
+}
+
 export const capitalize = (s: string): string => {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }

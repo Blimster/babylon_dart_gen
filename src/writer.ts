@@ -1,6 +1,6 @@
 import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind } from "./model"
 import { config } from "./config";
-import { firstScopeOfKind, isFunctionType, isTypeLiteralType, isTypeType, parseConfigType, typeLiteralNameFromScope } from "./helper";
+import { firstScopeOfKind, includeSecondLEvel, isFunctionType, isTypeLiteralType, isTypeType, parseConfigType, typeLiteralNameFromScope } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 class Writer {
@@ -138,12 +138,14 @@ const writeConstructor = (ctor: Constructor, scope: Scope, writer: Writer): void
 }
 
 const writeMethod = (method: Method, scope: Scope, writer: Writer): void => {
-    const methodScope = <Scope>{
-        kind: ScopeKind.function,
-        name: method.name,
-        parent: scope
-    };
-    writer.writeLine("  external " + (method.modifiers.length > 0 ? method.modifiers.join(" ") + " " : "") + typeToString(method.returnType, methodScope) + " " + method.name + parametersToString(method.parameters, methodScope) + ";");
+    if (includeSecondLEvel(firstScopeOfKind(scope, ScopeKind.clazz).name, method.name)) {
+        const methodScope = <Scope>{
+            kind: ScopeKind.function,
+            name: method.name,
+            parent: scope
+        };
+        writer.writeLine("  external " + (method.modifiers.length > 0 ? method.modifiers.join(" ") + " " : "") + typeToString(method.returnType, methodScope) + " " + method.name + parametersToString(method.parameters, methodScope) + ";");
+    }
 }
 
 const typeLiteralsForTypeLiteral = (type: TypeLiteralType, scope: Scope, result: { [key: string]: TypeLiteralType }): void => {
