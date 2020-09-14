@@ -79,7 +79,9 @@ export enum ScopeKind {
     function,
     parameter,
     typeLiteral,
-    property
+    property,
+    getter,
+    setter
 }
 
 export interface Scope {
@@ -96,6 +98,7 @@ export interface SecondLevelFilter {
 export interface Config {
     fileName: string;
     libraryName: string;
+    outFolder: string;
     typeReplacements: { [key: string]: string };
     include: { [key: string]: SecondLevelFilter }
 }

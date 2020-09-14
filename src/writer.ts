@@ -1,4 +1,4 @@
-import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind } from "./model"
+import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter } from "./model"
 import { config } from "./config";
 import { firstScopeOfKind, includeSecondLEvel, isFunctionType, isTypeLiteralType, isTypeType, parseConfigType, typeLiteralNameFromScope } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
@@ -17,11 +17,12 @@ class Writer {
     }
 
     toFile(): void {
-        if (!existsSync("out")) {
-            mkdirSync("out");
+        const outFolder = config.outFolder;
+        if (!existsSync(outFolder)) {
+            mkdirSync(outFolder);
         }
         const content = this.lines.join("");
-        writeFileSync("out/" + this.fileName, content);
+        writeFileSync(outFolder + "/" + this.fileName, content);
     }
 }
 
@@ -120,15 +121,19 @@ const typeToString = (type: Type, scope: Scope): string => {
     return "UNSUPPORTED: " + type.kind;
 };
 
+const parameterToString = (parameter: Parameter, scope: Scope): string => {
+    const paramScope = <Scope>{
+        kind: ScopeKind.parameter,
+        name: parameter.name,
+        parent: scope
+    };
+    return typeToString(parameter.type, paramScope) + " " + parameter.name;
+}
+
 const parametersToString = (parameters: Parameter[], scope: Scope): string => {
     const params: string[] = [];
     for (const p of parameters) {
-        const paramScope = <Scope>{
-            kind: ScopeKind.parameter,
-            name: p.name,
-            parent: scope
-        };
-        params.push(typeToString(p.type, paramScope) + " " + p.name);
+        params.push(parameterToString(p, scope));
     }
     return "(" + params.join(", ") + ")";
 }
@@ -145,6 +150,33 @@ const writeMethod = (method: Method, scope: Scope, writer: Writer): void => {
             parent: scope
         };
         writer.writeLine("  external " + (method.modifiers.length > 0 ? method.modifiers.join(" ") + " " : "") + typeToString(method.returnType, methodScope) + " " + method.name + parametersToString(method.parameters, methodScope) + ";");
+    }
+}
+
+const writeGetter = (getter: Getter, scope: Scope, writer: Writer): void => {
+    const getterScope = <Scope>{
+        kind: ScopeKind.getter,
+        name: getter.name,
+        parent: scope
+    };
+    writer.writeLine("  external " + typeToString(getter.returnType, getterScope) + " get " + getter.name + ";");
+}
+
+const writeSetter = (setter: Setter, scope: Scope, writer: Writer): void => {
+    const getterScope = <Scope>{
+        kind: ScopeKind.setter,
+        name: setter.name,
+        parent: scope
+    };
+    writer.writeLine("  external set " + setter.name + "(" + parameterToString(setter.parameter, scope) + ");");
+}
+
+const writeGettersAndSetters = (getters: Getter[], setters: Setter[], scope: Scope, writer: Writer): void => {
+    for (const getter of getters) {
+        writeGetter(getter, scope, writer);
+    }
+    for (const setter of setters) {
+        writeSetter(setter, scope, writer);
     }
 }
 
@@ -236,6 +268,7 @@ const writeClass = (clazz: Class, writer: Writer): void => {
     for (const ctor of clazz.constructors) {
         writeConstructor(ctor, scope, writer);
     }
+    writeGettersAndSetters(clazz.getters, clazz.setters, scope, writer);
     for (const method of clazz.methods) {
         writeMethod(method, scope, writer);
     }
