@@ -29,7 +29,7 @@ export const includeTopLevel = (name: string): boolean => {
     return !!config.include[name];
 };
 
-export const includeSecondLEvel = (topLevelName: string, secondLevelName: string): boolean => {
+export const includeSecondLevel = (topLevelName: string, secondLevelName: string): boolean => {
     if (!config.include[topLevelName]) {
         return false;
     }

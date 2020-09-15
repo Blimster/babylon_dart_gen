@@ -1,6 +1,6 @@
-import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter } from "./model"
+import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property } from "./model"
 import { config } from "./config";
-import { firstScopeOfKind, includeSecondLEvel, isFunctionType, isTypeLiteralType, isTypeType, parseConfigType, typeLiteralNameFromScope } from "./helper";
+import { firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFunctionType, isTypeLiteralType, isTypeType, parseConfigType, typeLiteralNameFromScope } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 class Writer {
@@ -105,7 +105,7 @@ const typeToString = (type: Type, scope: Scope): string => {
         result += handleThisType(type, scope);
         if (type.typeParameters && type.typeParameters.length > 0) {
             result += "<";
-            result += type.typeParameters.map(t => typeToString(replaceType(t, scope), scope)).join(", ");
+            result += type.typeParameters.map(t => typeToString(t, scope)).join(", ");
             result += ">";
         }
         if (type.isArray) {
@@ -139,11 +139,13 @@ const parametersToString = (parameters: Parameter[], scope: Scope): string => {
 }
 
 const writeConstructor = (ctor: Constructor, scope: Scope, writer: Writer): void => {
-    writer.writeLine("  external " + firstScopeOfKind(scope, ScopeKind.clazz).name + parametersToString(ctor.parameters, scope) + ";");
+    if (includeSecondLevel(scope.name, "constructor")) {
+        writer.writeLine("  external " + firstScopeOfKind(scope, ScopeKind.clazz).name + parametersToString(ctor.parameters, scope) + ";");
+    }
 }
 
 const writeMethod = (method: Method, scope: Scope, writer: Writer): void => {
-    if (includeSecondLEvel(firstScopeOfKind(scope, ScopeKind.clazz).name, method.name)) {
+    if (includeSecondLevel(firstScopeOfKind(scope, ScopeKind.clazz).name, method.name)) {
         const methodScope = <Scope>{
             kind: ScopeKind.function,
             name: method.name,
@@ -173,10 +175,22 @@ const writeSetter = (setter: Setter, scope: Scope, writer: Writer): void => {
 
 const writeGettersAndSetters = (getters: Getter[], setters: Setter[], scope: Scope, writer: Writer): void => {
     for (const getter of getters) {
-        writeGetter(getter, scope, writer);
+        if (includeSecondLevel(scope.name, getter.name)) {
+            writeGetter(getter, scope, writer);
+        }
     }
     for (const setter of setters) {
-        writeSetter(setter, scope, writer);
+        if (includeSecondLevel(scope.name, setter.name)) {
+            writeSetter(setter, scope, writer);
+        }
+    }
+}
+
+const writeProperties = (properties: Property[], scope: Scope, writer: Writer): void => {
+    for (const property of properties) {
+        if (includeSecondLevel(scope.name, property.name)) {
+            writer.writeLine("  " + typeToString(property.type, scope) + " " + property.name + ";");
+        }
     }
 }
 
@@ -268,6 +282,7 @@ const writeClass = (clazz: Class, writer: Writer): void => {
     for (const ctor of clazz.constructors) {
         writeConstructor(ctor, scope, writer);
     }
+    writeProperties(clazz.properties, scope, writer);
     writeGettersAndSetters(clazz.getters, clazz.setters, scope, writer);
     for (const method of clazz.methods) {
         writeMethod(method, scope, writer);

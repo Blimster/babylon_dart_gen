@@ -14,7 +14,40 @@ const isHidden = (name: string): boolean => {
     return name.startsWith("_");
 }
 
-export const parseType = (typeNode: ts.TypeNode, checker: ts.TypeChecker): Type => {
+const parseProperty = (node: ts.PropertyDeclaration | ts.PropertySignature, checker: ts.TypeChecker): Property => {
+    if (!node.name.getText().startsWith("_")) {
+        if (node.type) {
+            return <Property>{
+                name: node.name.getText(),
+                type: parseType(node.type, checker)
+            }
+        }
+        return <Property>{
+            name: node.name.getText(),
+            type: {
+                kind: TypeKind.type,
+                name: "dynamic",
+            }
+        }
+    }
+    return null;
+}
+
+const parseProperties = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Property[] => {
+    const result: Property[] = [];
+    node.forEachChild(p => {
+        if (ts.isPropertyDeclaration(p)) {
+            const prop = parseProperty(p, checker);
+            if (prop) {
+                result.push(prop);
+            }
+        }
+    });
+    return result;
+}
+
+
+const parseType = (typeNode: ts.TypeNode, checker: ts.TypeChecker): Type => {
     if (ts.isArrayTypeNode(typeNode)) {
         const elementType = parseType(typeNode.elementType, checker);
         if (isTypeType(elementType)) {
@@ -36,10 +69,7 @@ export const parseType = (typeNode: ts.TypeNode, checker: ts.TypeChecker): Type 
         const properties: Property[] = [];
         typeNode.members.forEach(m => {
             if (ts.isPropertySignature(m)) {
-                properties.push(<Property>{
-                    name: m.name.getText(),
-                    type: parseType(m.type, checker)
-                });
+                properties.push(parseProperty(m, checker));
             }
         });
         return <TypeLiteralType>{
@@ -164,6 +194,7 @@ const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class =
                 name: symbol.getName(),
                 superType,
                 constructors: parseConstructors(node, checker),
+                properties: parseProperties(node, checker),
                 getters: parseGetters(node, checker),
                 setters: parseSetters(node, checker),
                 methods: parseMethods(node, checker)
