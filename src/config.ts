@@ -139,7 +139,7 @@ export const config = <Config>{
         Quaternion: {},
         Ray: {},
         ShadowLight: {
-            include: []
+            exclude: ["setShadowProjectionMatrix"]
         },
         Sprite: {
             include: []
