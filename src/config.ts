@@ -25,20 +25,19 @@ export const config = <Config>{
     include: {
         AbstractScene: {
             exclude: [
-                "morphTargetManagers",
-                "actionManagers",
-                "AddParser",
-                "GetParser",
-                "AddIndividualParser",
-                "GetIndividualParser"
+                "morphTargetManagers", // type not yet generated
+                "actionManagers", // type not yet generated
+                "AddParser", // type not yet generated
+                "GetParser", // type not yet generated
+                "AddIndividualParser", // type not yet generated
+                "GetIndividualParser" // type not yet generated
             ]
         },
         ArcRotateCamera: {
             exclude: [
-                "focusOn",
-                "setTarget",
-                "onMeshTargetChangedObservable",
-                "inputs"]
+                "focusOn", // union type
+                "setTarget", // union type
+                "inputs"] // type not yet generated
         },
         AutoRotationBehavior: {},
         BackEase: {},
@@ -47,24 +46,23 @@ export const config = <Config>{
         BoundingSphere: {},
         Camera: {
             exclude: [
-                "constructor",
-                "toString",
-                "dispose",
-                "getActiveMeshes",
-                "inputs",
-                "attachControl",
-                "onViewMatrixChangedObservable",
-                "onProjectionMatrixChangedObservable",
-                "onAfterCheckInputsObservable",
-                "onRestoreStateObservable",
-                "isInFrustum",
-                "isCompletelyInFrustum"]
+                "constructor", // invalid super ctor call in subclass
+                "dispose", // invalid override in subclass
+                "getActiveMeshes", // type not yet generated
+                "inputs", // type not yet generated
+                "isInFrustum", // interface type
+                "isCompletelyInFrustum"  // interface type
+            ]
         },
         Color3: {
-            exclude: ['clampToRef']
+            exclude: [
+                'clampToRef' // union type
+            ]
         },
         Color4: {
-            exclude: ['clampToRef']
+            exclude: [
+                'clampToRef' // union type
+            ]
         },
         ColorCurves: {},
         DataBuffer: {},
@@ -75,58 +73,65 @@ export const config = <Config>{
         Effect: {
             include: []
         },
+        EventState: {},
         ExponentialEase: {},
         FramingBehavior: {
             exclude: [
-                "zoomOnMesh",
-                "zoomOnMeshHierarchy",
-                "zoomOnMeshesHierarchy",
-                "zoomOnBoundingInfo"]
+                "zoomOnMesh", // Nullable<> on function type
+                "zoomOnMeshHierarchy", // Nullable<> on function type
+                "zoomOnMeshesHierarchy", // Nullable<> on function type
+                "zoomOnBoundingInfo" // Nullable<> on function type
+            ]
         },
         FreeCamera: {
-            exclude: ["inputs"]
+            exclude: [
+                "inputs" // type not yet generated
+            ]
         },
         FresnelParameters: {
             include: []
         },
         Geometry: {
             exclude: [
-                "extend",
-                "getVertexBuffers"
+                "extend", // type not yet generated
+                "getVertexBuffers" // Nullable<> on return type
             ]
         },
         HemisphericLight: {
-            exclude: ["getShadowGenerator"]
+            exclude: [
+                "getShadowGenerator" // interface type
+            ]
         },
         ImageProcessingConfiguration: {
             exclude: [
-                "onUpdateParameters",
-                "PrepareUniforms",
-                "PrepareSamplers",
-                "prepareDefines"]
+                "PrepareUniforms", // interface type
+                "PrepareSamplers", // interface type
+                "prepareDefines" // interface type
+            ]
         },
         IntersectionInfo: {},
         Light: {
             exclude: [
-                "constructor",
-                "getShadowGenerator",
-                "toString",
-                "transferToEffect",
-                "transferToNodeMaterialEffect",
-                "GetConstructorFromName",
-                "prepareLightSpecificDefines"]
+                "constructor", // invalid ctor override in subclass
+                "getShadowGenerator", // interface type
+                "GetConstructorFromName", // Nullable<> on function type
+            ]
         },
         Matrix: {
             exclude: [
-                "Reflection",
-                "ReflectionToRef"]
+                "Reflection", // interface type
+                "ReflectionToRef" // interface type
+            ]
         },
         MultiMaterial: {
             exclude: [
-                "subMaterials",
-                "value",
-                "getChildren"]
+                "subMaterials", // List of Nullable<>
+                "value", // List of Nullable<>
+                "getChildren" // List of Nullable<>
+            ]
         },
+        Observable: {},
+        Observer: {},
         PickingInfo: {},
         Plane: {},
         PointLight: {},
@@ -134,30 +139,40 @@ export const config = <Config>{
             include: []
         },
         PushMaterial: {
-            exclude: ["constructor"]
+            exclude: [
+                "constructor" // invalid ctor override
+            ]
         },
         Quaternion: {},
         Ray: {},
         ShadowLight: {
-            exclude: ["setShadowProjectionMatrix"]
+            exclude: [
+                "setShadowProjectionMatrix" // interface type
+            ]
         },
         Sprite: {
             include: []
         },
         StandardMaterial: {
-            exclude: ["getAnimatables"]
+            exclude: [
+                "getAnimatables" // interface type
+            ]
         },
         SubMesh: {
             include: []
         },
         TargetCamera: {
-            exclude: ["constructor"]
+            exclude: [
+                "constructor" // invalid ctor override
+            ]
         },
         Vector2: {},
         Vector3: {},
         Vector4: {},
         VertexBuffer: {
-            exclude: ["constructor"]
+            exclude: [
+                "constructor" // union type
+            ]
         },
         VertexData: {},
         Viewport: {}

@@ -114,7 +114,7 @@ const typeToString = (type: Type, scope: Scope): string => {
 
         return result;
     } else if (isFunctionType(type)) {
-        return typeToString(type.returnType, scope) + " Function(" + type.parameters.map(p => typeToString(p.type, scope) + " " + p.name) + ")";
+        return typeToString(type.returnType, scope) + " Function(" + (type.parameters.map(p => typeToString(p.type, scope) + " " + p.name)).join(", ") + ")";
     } else if (isTypeLiteralType(type)) {
         return typeLiteralNameFromScope(scope);
     }
@@ -283,7 +283,13 @@ const writeClass = (clazz: Class, writer: Writer): void => {
 
     writer.writeLine();
     writer.writeLine("@JS()");
+    if (clazz.modifiers.length > 0) {
+        writer.writeToken(clazz.modifiers.join(" ") + " ");
+    }
     writer.writeToken("class " + clazz.name);
+    if (clazz.typeParams.length > 0) {
+        writer.writeToken("<" + clazz.typeParams.join(", ") + ">");
+    }
     if (clazz.superType) {
         writer.writeToken(" extends " + typeToString(clazz.superType, null));
     }

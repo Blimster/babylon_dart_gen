@@ -64,6 +64,8 @@ export interface Constructor {
 
 export interface Class {
     name: string;
+    modifiers: string[];
+    typeParams: string[];
     superType: TypeType;
     constructors: Constructor[];
     properties: Property[];

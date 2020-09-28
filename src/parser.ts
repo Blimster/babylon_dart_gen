@@ -164,7 +164,7 @@ const parseMethods = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Metho
                 // console.log(n.name.getText() + " -> " + n.type.kind);
                 result.push({
                     name: n.name.getText(),
-                    modifiers: n.modifiers ? n.modifiers.map(m => m.getText()) : [],
+                    modifiers: n.modifiers ? n.modifiers.filter(m => m.getText() !== "abstract").map(m => m.getText()) : [],
                     returnType: parseType(n.type, checker),
                     parameters: parseParameters(n.parameters, checker),
                     doc: ts.displayPartsToString(symbol.getDocumentationComment(checker))
@@ -180,6 +180,21 @@ const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class =
 
     if (includeTopLevel(symbol.getName()) && isExported(node)) {
         if (!isHidden(symbol.getName())) {
+            const modifiers: string[] = [];
+            if (node.modifiers) {
+                for (const modifier of node.modifiers) {
+                    if (modifier.getText().trim() !== "export") {
+                        modifiers.push(modifier.getText().trim());
+                    }
+                }
+            }
+
+            const typeParams: string[] = [];
+            if (node.typeParameters) {
+                for (const typeParam of node.typeParameters) {
+                    typeParams.push(typeParam.name.getText());
+                }
+            }
             let superType: TypeType = null;
             if (node.heritageClauses) {
                 for (const heritageClause of node.heritageClauses) {
@@ -193,6 +208,8 @@ const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class =
 
             const clazz = {
                 name: symbol.getName(),
+                modifiers,
+                typeParams,
                 superType,
                 constructors: parseConstructors(node, checker),
                 properties: parseProperties(node, checker),
