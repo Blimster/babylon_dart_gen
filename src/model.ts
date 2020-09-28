@@ -29,10 +29,10 @@ export interface TypeLiteralType extends Type {
     properties: Property[];
 }
 
-// TODO optional parameters (e.g. ArcRotateCamera ctor)
 export interface Parameter {
     name: string;
     type: Type;
+    optional: boolean;
     doc: string;
 }
 

@@ -1,6 +1,6 @@
 import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property } from "./model"
 import { config } from "./config";
-import { firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFunctionType, isTypeLiteralType, isTypeType, parseConfigType, typeLiteralNameFromScope } from "./helper";
+import { firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, parseConfigType, typeLiteralNameFromScope } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 class Writer {
@@ -132,8 +132,17 @@ const parameterToString = (parameter: Parameter, scope: Scope): string => {
 
 const parametersToString = (parameters: Parameter[], scope: Scope): string => {
     const params: string[] = [];
-    for (const p of parameters) {
-        params.push(parameterToString(p, scope));
+    for (let i = 0; i < parameters.length; i++) {
+        const p = parameters[i];
+        let paramString = "";
+        if (isFirstOptionalParam(parameters, i)) {
+            paramString += "[";
+        }
+        paramString += parameterToString(p, scope);
+        if (isLastOptionalParam(parameters, i)) {
+            paramString += "]";
+        }
+        params.push(paramString);
     }
     return "(" + params.join(", ") + ")";
 }

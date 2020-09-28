@@ -1,5 +1,5 @@
 import { config } from "./config";
-import { FunctionType, Scope, ScopeKind, Type, TypeKind, TypeLiteralType, TypeType } from "./model";
+import { FunctionType, Parameter, Scope, ScopeKind, Type, TypeKind, TypeLiteralType, TypeType } from "./model";
 
 export const parseConfigType = (type: string): TypeType => {
     type = type.trim();
@@ -76,4 +76,17 @@ export const firstScopeOfKind = (scope: Scope, kind: ScopeKind): Scope => {
         return scope;
     }
     return firstScopeOfKind(scope.parent, kind);
+}
+
+export const isFirstOptionalParam = (params: Parameter[], index: number): boolean => {
+    for (let i = 0; i < index; i++) {
+        if (params[i].optional) {
+            return false;
+        }
+    }
+    return params[index].optional;
+}
+
+export const isLastOptionalParam = (params: Parameter[], index: number): boolean => {
+    return params.length === index + 1 && params[index].optional;
 }

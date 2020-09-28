@@ -97,6 +97,7 @@ const parseParameter = (parameter: ts.ParameterDeclaration, checker: ts.TypeChec
     return {
         name: parameter.name.getText(),
         type: parseType(parameter.type, checker),
+        optional: checker.isOptionalParameter(parameter),
         doc: "TODO"
     };
 }
