@@ -20,6 +20,7 @@ export const config = <Config>{
         "ArrayLike<#1>": "List<#1>",
         "Nullable<#1>": "#1",
         "Array<#1>": "List<#1>",
+        "Partial<#1>": "#1",
         "HTMLElement": "HtmlElement"
     },
     include: {
@@ -50,8 +51,6 @@ export const config = <Config>{
                 "dispose", // invalid override in subclass
                 "getActiveMeshes", // type not yet generated
                 "inputs", // type not yet generated
-                "isInFrustum", // interface type
-                "isCompletelyInFrustum"  // interface type
             ]
         },
         Color3: {
@@ -97,19 +96,19 @@ export const config = <Config>{
                 "getVertexBuffers" // Nullable<> on return type
             ]
         },
-        HemisphericLight: {
-            exclude: [
-                "getShadowGenerator" // interface type
-            ]
-        },
-        ImageProcessingConfiguration: {
-            exclude: [
-                "PrepareUniforms", // interface type
-                "PrepareSamplers", // interface type
-                "prepareDefines" // interface type
-            ]
-        },
+        HemisphericLight: {},
+        ICullable: {},
+        IImageProcessingConfigurationDefines: {},
+        ImageProcessingConfiguration: {},
         IntersectionInfo: {},
+        IPlaneLike: {},
+        IShadowGenerator: {
+            exclude: [
+                "forceCompilation", // Partial<> not replaced
+                "forceCompilationAsync", // Partial<> not replaced
+            ]
+        },
+        IVector3Like: {},
         Light: {
             exclude: [
                 "constructor", // invalid ctor override in subclass
@@ -117,10 +116,11 @@ export const config = <Config>{
                 "GetConstructorFromName", // Nullable<> on function type
             ]
         },
+        MaterialDefines: {},
         Matrix: {
             exclude: [
-                "Reflection", // interface type
-                "ReflectionToRef" // interface type
+                // "Reflection", // interface type
+                // "ReflectionToRef" // interface type
             ]
         },
         MultiMaterial: {

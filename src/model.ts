@@ -62,20 +62,28 @@ export interface Constructor {
     doc: string;
 }
 
-export interface Class {
+export interface ClassOrInterface {
     name: string;
-    modifiers: string[];
     typeParams: string[];
+    properties: Property[];
+    methods: Method[];
+}
+
+export interface Class extends ClassOrInterface {
+    modifiers: string[];
     superType: TypeType;
     constructors: Constructor[];
-    properties: Property[];
     getters: Getter[];
     setters: Setter[];
-    methods: Method[];
+}
+
+export interface Interface extends ClassOrInterface {
+    superTypes: TypeType[];
 }
 
 export interface Library {
     classes: Class[];
+    interfaces: Interface[];
 }
 
 export enum ScopeKind {

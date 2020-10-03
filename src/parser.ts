@@ -1,5 +1,5 @@
 import * as ts from "typescript";
-import { Class, Constructor, Parameter, Getter, Setter, Method, Library, Type, TypeType, TypeKind, FunctionType, TypeLiteralType, Property } from "./model";
+import { Class, Constructor, Parameter, Getter, Setter, Method, Library, Type, TypeType, TypeKind, FunctionType, TypeLiteralType, Property, Interface } from "./model";
 import { config } from "./config";
 import { includeTopLevel, isTypeType } from "./helper";
 
@@ -33,13 +33,17 @@ const parseProperty = (node: ts.PropertyDeclaration | ts.PropertySignature, chec
     return null;
 }
 
-const parseProperties = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Property[] => {
+const parseProperties = (node: ts.Node, checker: ts.TypeChecker, debug?: boolean): Property[] => {
     const result: Property[] = [];
     node.forEachChild(p => {
-        if (ts.isPropertyDeclaration(p)) {
+        if (ts.isPropertyDeclaration(p) || ts.isPropertySignature(p)) {
             const prop = parseProperty(p, checker);
             if (prop) {
                 result.push(prop);
+            }
+        } else {
+            if (debug) {
+                console.log(p.kind);
             }
         }
     });
@@ -155,13 +159,12 @@ const parseSetters = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Sette
     return result;
 }
 
-const parseMethods = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Method[] => {
+const parseMethods = (node: ts.Node, checker: ts.TypeChecker, debug?: boolean): Method[] => {
     const result: Method[] = [];
     node.forEachChild(n => {
-        if (ts.isMethodDeclaration(n)) {
+        if (ts.isMethodDeclaration(n) || ts.isMethodSignature(n)) {
             if (!isHidden(n.name.getText())) {
                 const symbol = checker.getSymbolAtLocation(n.name);
-                // console.log(n.name.getText() + " -> " + n.type.kind);
                 result.push({
                     name: n.name.getText(),
                     modifiers: n.modifiers ? n.modifiers.filter(m => m.getText() !== "abstract").map(m => m.getText()) : [],
@@ -169,6 +172,10 @@ const parseMethods = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Metho
                     parameters: parseParameters(n.parameters, checker),
                     doc: ts.displayPartsToString(symbol.getDocumentationComment(checker))
                 });
+            }
+        } else {
+            if (debug) {
+                console.log(n.kind);
             }
         }
     });
@@ -199,14 +206,13 @@ const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class =
             if (node.heritageClauses) {
                 for (const heritageClause of node.heritageClauses) {
                     if (heritageClause.token === ts.SyntaxKind.ExtendsKeyword) {
-                        const symbol = checker.getSymbolAtLocation(heritageClause.types[0].expression);
                         const typeNode = heritageClause.types[0];
                         superType = parseType(typeNode, checker) as TypeType;
                     }
                 }
             }
 
-            const clazz = {
+            return {
                 name: symbol.getName(),
                 modifiers,
                 typeParams,
@@ -217,17 +223,56 @@ const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class =
                 setters: parseSetters(node, checker),
                 methods: parseMethods(node, checker)
             };
-            return clazz;
         }
     }
     return null;
 };
 
+const parseInterface = (node: ts.InterfaceDeclaration, checker: ts.TypeChecker): Interface => {
+    const symbol = checker.getSymbolAtLocation(node.name);
+    if (includeTopLevel(symbol.getName()) && isExported(node)) {
+        if (!isHidden(symbol.getName())) {
+            const typeParams: string[] = [];
+            if (node.typeParameters) {
+                for (const typeParam of node.typeParameters) {
+                    typeParams.push(typeParam.name.getText());
+                }
+            }
+
+            let superTypes: TypeType[] = [];
+            if (node.heritageClauses) {
+                for (const heritageClause of node.heritageClauses) {
+                    if (heritageClause.token === ts.SyntaxKind.ExtendsKeyword) {
+                        for (const type of heritageClause.types) {
+                            superTypes.push(parseType(type, checker) as TypeType);
+                        }
+                    }
+                }
+            }
+
+            const interfaze = {
+                name: symbol.getName(),
+                typeParams,
+                superTypes,
+                properties: parseProperties(node, checker),
+                methods: parseMethods(node, checker)
+            };
+            return interfaze;
+        }
+    }
+    return null;
+}
+
 const parseNode = (node: ts.Node, checker: ts.TypeChecker, library: Library): void => {
     if (ts.isClassDeclaration(node)) {
-        const clazz = parseClass(node, checker)
+        const clazz = parseClass(node, checker);
         if (clazz) {
             library.classes.push(clazz);
+        }
+    } else if (ts.isInterfaceDeclaration(node)) {
+        const interfaze = parseInterface(node, checker);
+        if (interfaze) {
+            library.interfaces.push(interfaze);
         }
     } else {
         ts.forEachChild(node, (n) => parseNode(n, checker, library));
@@ -245,7 +290,8 @@ export const parseLibraries = (): Library => {
     const sourceFiles = program.getSourceFiles();
 
     const library: Library = {
-        classes: []
+        classes: [],
+        interfaces: [],
     };
     for (const sourceFile of sourceFiles) {
         if (sourceFile.fileName.indexOf(config.fileName) !== -1) {

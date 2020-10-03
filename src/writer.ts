@@ -1,4 +1,4 @@
-import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property } from "./model"
+import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface } from "./model"
 import { config } from "./config";
 import { firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, parseConfigType, typeLiteralNameFromScope } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
@@ -217,7 +217,7 @@ const typeLiteralsForTypeLiteral = (type: TypeLiteralType, scope: Scope, result:
     });
 }
 
-const typeLiteralsForClass = (clazz: Class): { [key: string]: TypeLiteralType } => {
+const typeLiteralsForClassOrInterface = (clazz: ClassOrInterface): { [key: string]: TypeLiteralType } => {
     const result = <{ [key: string]: TypeLiteralType }>{};
     const classScope = <Scope>{
         kind: ScopeKind.clazz,
@@ -272,7 +272,7 @@ const writeClass = (clazz: Class, writer: Writer): void => {
 
     writer.writeLine("part of " + config.libraryName + ";");
 
-    const typeLiterals = typeLiteralsForClass(clazz);
+    const typeLiterals = typeLiteralsForClassOrInterface(clazz);
     Object.keys(typeLiterals).forEach(name => {
         writer.writeLine();
         writeTypeLiteral(name, typeLiterals[name], {
@@ -307,8 +307,47 @@ const writeClass = (clazz: Class, writer: Writer): void => {
     writer.toFile();
 }
 
+const writeInterface = (interfaze: Interface, writer: Writer): void => {
+    const scope = <Scope>{
+        kind: ScopeKind.clazz,
+        name: interfaze.name
+    };
+
+    writer.writeLine("part of " + config.libraryName + ";");
+
+    const typeLiterals = typeLiteralsForClassOrInterface(interfaze);
+    Object.keys(typeLiterals).forEach(name => {
+        writer.writeLine();
+        writeTypeLiteral(name, typeLiterals[name], {
+            kind: ScopeKind.typeLiteral,
+            name: name
+        }, writer);
+    });
+
+    writer.writeLine();
+    writer.writeLine("@JS()");
+    writer.writeToken("abstract class " + interfaze.name);
+    if (interfaze.typeParams.length > 0) {
+        writer.writeToken("<" + interfaze.typeParams.join(", ") + ">");
+    }
+    if (interfaze.superTypes.length > 0) {
+        writer.writeToken(" extends " + interfaze.superTypes.map(t => typeToString(t, null)).join(", "));
+    }
+    writer.writeLine(" {");
+    writeProperties(interfaze.properties, scope, writer);
+    for (const method of interfaze.methods) {
+        writeMethod(method, scope, writer);
+    }
+    writer.writeLine("}");
+    writer.writeLine();
+    writer.toFile();
+}
+
 export const writeLibrary = (library: Library): void => {
     for (const clazz of library.classes) {
         writeClass(clazz, new Writer(clazz.name.toLowerCase() + ".dart"));
+    }
+    for (const interfaze of library.interfaces) {
+        writeInterface(interfaze, new Writer(interfaze.name.toLowerCase() + ".dart"));
     }
 }
