@@ -1,5 +1,5 @@
 import { config } from "./config";
-import { FunctionType, Parameter, Scope, ScopeKind, Type, TypeKind, TypeLiteralType, TypeType } from "./model";
+import { Class, FunctionType, Interface, Library, Parameter, Scope, ScopeKind, Type, TypeKind, TypeLiteralType, TypeType } from "./model";
 
 export const parseConfigType = (type: string): TypeType => {
     type = type.trim();
@@ -89,4 +89,80 @@ export const isFirstOptionalParam = (params: Parameter[], index: number): boolea
 
 export const isLastOptionalParam = (params: Parameter[], index: number): boolean => {
     return params.length === index + 1 && params[index].optional;
+}
+
+export const classByName = (name: String, library: Library): Class => {
+    for (const clazz of library.classes) {
+        if (clazz.name === name) {
+            return clazz;
+        }
+    }
+    console.log("class not found: " + name);
+    return null;
+}
+
+export const interfaceByName = (name: String, library: Library): Interface => {
+    for (const interfaze of library.interfaces) {
+        if (interfaze.name === name) {
+            return interfaze;
+        }
+    }
+    console.log("interface not found: " + name);
+    return null;
+}
+
+export const implementedInterfaces = (library: Library, clazz: Class, interfaces: Map<string, Interface>): Interface[] => {
+    if (clazz) {
+        for (const interfaze of clazz.interfaces) {
+            interfaces.set(interfaze.name, interfaceByName(interfaze.name, library));
+        }
+        if (clazz.superType) {
+            implementedInterfaces(library, classByName(clazz.superType.name, library), interfaces);
+        }
+    }
+    return Array.from(interfaces.values());
+}
+
+export const extendedInterfaces = (library: Library, interfaze: Interface, interfaces: Map<string, Interface>): void => {
+    interfaces.set(interfaze.name, interfaceByName(interfaze.name, library));
+    for (const superInterfaze of interfaze.superTypes) {
+        extendedInterfaces(library, interfaceByName(superInterfaze.name, library), interfaces);
+    }
+}
+
+export const missingGettersAndSetters = (library: Library, clazz: Class, interfaces: Interface[], properties: Map<string, [boolean, boolean]>): Map<string, [boolean, boolean]> => {
+    if (clazz) {
+        for (const interfaze of interfaces) {
+            for (const property of interfaze.properties) {
+                const getterSetter: [boolean, boolean] = [true, true];
+                for (const getter of clazz.getters) {
+                    if (getter.name === property.name) {
+                        getterSetter[0] = false;
+                    }
+                }
+                for (const setter of clazz.setters) {
+                    if (setter.name === property.name) {
+                        getterSetter[1] = false;
+                    }
+                }
+                for (const prop of clazz.properties) {
+                    if (prop.name === property.name) {
+                        getterSetter[0] = false;
+                        getterSetter[1] = false;
+                    }
+                }
+                let currentGetterSetter = properties.get(property.name);
+                if (currentGetterSetter) {
+                    currentGetterSetter[0] = currentGetterSetter[0] && getterSetter[0];
+                    currentGetterSetter[1] = currentGetterSetter[1] && getterSetter[1];
+                } else {
+                    properties.set(property.name, getterSetter);
+                }
+            }
+        }
+        if (clazz.superType) {
+            missingGettersAndSetters(library, classByName(clazz.superType.name, library), interfaces, properties);
+        }
+    }
+    return properties;
 }

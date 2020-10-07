@@ -16,17 +16,35 @@ const isHidden = (name: string): boolean => {
 
 const parseProperty = (node: ts.PropertyDeclaration | ts.PropertySignature, checker: ts.TypeChecker): Property => {
     if (!node.name.getText().startsWith("_")) {
+        let isStatic = false;
+        let isReadOnly = false;
+        if (node.modifiers) {
+            node.modifiers.forEach(modifier => {
+                if (modifier.getText() === "static") {
+                    isStatic = true;
+                }
+                if (modifier.getText() === "readonly") {
+                    isReadOnly = true;
+                }
+            });
+        }
         if (node.type) {
-            return <Property>{
+            return {
+                isStatic,
+                isReadOnly,
                 name: node.name.getText(),
                 type: parseType(node.type, checker)
             }
         }
-        return <Property>{
+        return {
+            isStatic,
+            isReadOnly,
             name: node.name.getText(),
-            type: {
+            type: <TypeType>{
                 kind: TypeKind.type,
                 name: "dynamic",
+                isArray: false,
+                typeParameters: []
             }
         }
     }
@@ -85,6 +103,13 @@ const parseType = (typeNode: ts.TypeNode, checker: ts.TypeChecker): Type => {
             kind: TypeKind.function,
             returnType: parseType(typeNode.type, checker),
             parameters: parseParameters(typeNode.parameters, checker)
+        };
+    } else if (ts.isExpressionWithTypeArguments(typeNode)) {
+        return <TypeType>{
+            kind: TypeKind.type,
+            name: typeNode.expression.getText(),
+            typeParameters: typeNode.typeArguments ? typeNode.typeArguments.map(ta => parseType(ta, checker)) : [],
+            isArray: false
         };
     } else {
         return <TypeType>{
@@ -187,11 +212,11 @@ const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class =
 
     if (includeTopLevel(symbol.getName()) && isExported(node)) {
         if (!isHidden(symbol.getName())) {
-            const modifiers: string[] = [];
+            let isAbstract = false;
             if (node.modifiers) {
                 for (const modifier of node.modifiers) {
-                    if (modifier.getText().trim() !== "export") {
-                        modifiers.push(modifier.getText().trim());
+                    if (modifier.getText().trim() === "abstract") {
+                        isAbstract = true;
                     }
                 }
             }
@@ -203,20 +228,26 @@ const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class =
                 }
             }
             let superType: TypeType = null;
+            const interfaces: TypeType[] = [];
             if (node.heritageClauses) {
                 for (const heritageClause of node.heritageClauses) {
                     if (heritageClause.token === ts.SyntaxKind.ExtendsKeyword) {
                         const typeNode = heritageClause.types[0];
                         superType = parseType(typeNode, checker) as TypeType;
+                    } else if (heritageClause.token === ts.SyntaxKind.ImplementsKeyword) {
+                        for (const type of heritageClause.types) {
+                            interfaces.push(parseType(type, checker) as TypeType);
+                        }
                     }
                 }
             }
 
             return {
                 name: symbol.getName(),
-                modifiers,
+                isAbstract,
                 typeParams,
                 superType,
+                interfaces,
                 constructors: parseConstructors(node, checker),
                 properties: parseProperties(node, checker),
                 getters: parseGetters(node, checker),
@@ -251,7 +282,7 @@ const parseInterface = (node: ts.InterfaceDeclaration, checker: ts.TypeChecker):
             }
 
             const interfaze = {
-                name: symbol.getName(),
+                name: node.name.getText(),
                 typeParams,
                 superTypes,
                 properties: parseProperties(node, checker),

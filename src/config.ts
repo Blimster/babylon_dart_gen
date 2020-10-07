@@ -1,13 +1,14 @@
 import { Config, Type, TypeKind, TypeType } from "./model";
 
 export const config = <Config>{
-    fileName: "babylon.d.ts",
+    fileName: "node_modules/babylonjs/babylon.module.d.ts",
     libraryName: "babylon",
     outFolder: "../babylon_dart/lib/src",
     typeReplacements: {
         "any": "dynamic",
         "string": "String",
         "boolean": "bool",
+        "Boolean": "bool",
         "number": "num",
         "float": "num",
         "Float32Array": "Float32List",
@@ -24,6 +25,22 @@ export const config = <Config>{
         "HTMLElement": "HtmlElement"
     },
     include: {
+        AbstractActionManager: {
+            exclude: [
+                "Triggerts", // type literal not generated
+            ]
+        },
+        AbstractMesh: {
+            exclude: [
+                "collider", // not yet generated
+                "getIndices", // invalid override
+                "getVerticesData", // invalid override
+                "setIndices", // invalid override
+                "normalizeToUnitCube", // nullable function type
+                "intersects", // not yet generatedd
+                "intersectsMesh", // union type
+            ]
+        },
         AbstractScene: {
             exclude: [
                 "morphTargetManagers", // type not yet generated
@@ -34,16 +51,25 @@ export const config = <Config>{
                 "GetIndividualParser" // type not yet generated
             ]
         },
+        ActionManager: {},
         ArcRotateCamera: {
             exclude: [
                 "focusOn", // union type
                 "setTarget", // union type
-                "inputs"] // type not yet generated
+                "inputs", // type not yet generated
+                "dispose", // invalid override
+            ]
         },
         AutoRotationBehavior: {},
+        Bone: {
+            exclude: []
+        },
         BackEase: {},
+        BaseSubMesh: {},
+        Behavior: {},
         BouncingBehavior: {},
         BoundingBox: {},
+        BoundingInfo: {},
         BoundingSphere: {},
         Camera: {
             exclude: [
@@ -51,6 +77,7 @@ export const config = <Config>{
                 "dispose", // invalid override in subclass
                 "getActiveMeshes", // type not yet generated
                 "inputs", // type not yet generated
+                "computeWorldMatrix", // invalid override
             ]
         },
         Color3: {
@@ -70,7 +97,9 @@ export const config = <Config>{
         },
         EasingFunction: {},
         Effect: {
-            include: []
+            include: [
+                "dispose"
+            ]
         },
         EventState: {},
         ExponentialEase: {},
@@ -84,7 +113,8 @@ export const config = <Config>{
         },
         FreeCamera: {
             exclude: [
-                "inputs" // type not yet generated
+                "inputs", // type not yet generated
+                "dispose" // invalid override
             ]
         },
         FresnelParameters: {
@@ -93,13 +123,37 @@ export const config = <Config>{
         Geometry: {
             exclude: [
                 "extend", // type not yet generated
-                "getVertexBuffers" // Nullable<> on return type
+                "getVertexBuffers", // Nullable<> on return type
+                "updateVerticesData" // invalid override
             ]
         },
-        HemisphericLight: {},
+        GroundMesh: {
+            exclude: [
+                "serialize", // invlalid override
+            ]
+        },
+        HemisphericLight: {
+            exclude: [
+                "computeWorldMatrix", // invalid override
+            ]
+        },
+        IAction: {},
+        IActionEvent: {},
+        IAnimatable: {},
+        IBehaviorAware: {},
         ICullable: {},
+        IDisposable: {},
+        IEasingFunction: {},
+        IGetSetVerticesData: {},
         IImageProcessingConfigurationDefines: {},
         ImageProcessingConfiguration: {},
+        InstancedMesh: {
+            exclude: [
+                "getVerticesData", // invalid override
+                "setIndices", // invalid override
+                "getIndices", // invalid override
+            ]
+        },
         IntersectionInfo: {},
         IPlaneLike: {},
         IShadowGenerator: {
@@ -108,26 +162,55 @@ export const config = <Config>{
                 "forceCompilationAsync", // Partial<> not replaced
             ]
         },
+        IShadowLight: {},
         IVector3Like: {},
         Light: {
             exclude: [
                 "constructor", // invalid ctor override in subclass
-                "getShadowGenerator", // interface type
                 "GetConstructorFromName", // Nullable<> on function type
             ]
         },
-        MaterialDefines: {},
-        Matrix: {
+        LinesMesh: {
             exclude: [
-                // "Reflection", // interface type
-                // "ReflectionToRef" // interface type
+                "useVertexColor", // union type
+                "useVertexAlpha", // union type
+                "isReady", // isReady
+                "dispose", // dispose
+                "createInstance", // not yet generated
             ]
         },
+        MaterialDefines: {},
+        Matrix: {},
         MultiMaterial: {
             exclude: [
                 "subMaterials", // List of Nullable<>
                 "value", // List of Nullable<>
                 "getChildren" // List of Nullable<>
+            ]
+        },
+        Mesh: {
+            exclude: [
+                "morphTargetManager", // not yet generated
+                "instantiateHierarchy", // invalid override
+                "getLODLevels", // not yet generated
+                "validateSkinning", // not yet generated
+                "serialize", // invalid override
+                "MinMax", // not yet generated
+                "Center", // union type
+            ]
+        },
+        MeshBuilder: {},
+        Node: {
+            exclude: [
+                "inspectableCustomProperties", // not yet generated
+                "onReady", //  nullable function
+                "animationPropertiesOverride", // not yet generated
+                "AddNodeConstructor", // not yet generated
+                "Construct", // nullable function
+                "getAnimationRange", // nullable function
+                "getAnimationRanges", // nullable return type
+                "beginAnimation", // not yet generated
+                "getHierarchyBoundingVectors", // not yet generated, nullable function
             ]
         },
         Observable: {},
@@ -145,25 +228,35 @@ export const config = <Config>{
         },
         Quaternion: {},
         Ray: {},
-        ShadowLight: {
-            exclude: [
-                "setShadowProjectionMatrix" // interface type
-            ]
-        },
+        ShadowLight: {},
         Sprite: {
-            include: []
-        },
-        StandardMaterial: {
             exclude: [
-                "getAnimatables" // interface type
+                "constructor",
+                "playAnimation",
+                "manager",
+                "actionManager",
+                "Parse"
             ]
         },
+        StandardMaterial: {},
+        StandardMaterialDefines: {},
         SubMesh: {
-            include: []
+            exclude: [
+                "intersects" // function type 
+            ]
         },
         TargetCamera: {
             exclude: [
                 "constructor" // invalid ctor override
+            ]
+        },
+        TransformNode: {
+            exclude: [
+                "normalizeToUnitCube", // nullable on function
+                "lookAt", // enum param
+                "setPivotPoint", // enum param
+                "rotate", // enum param
+                "translate" // enum param
             ]
         },
         Vector2: {},

@@ -198,7 +198,27 @@ const writeGettersAndSetters = (getters: Getter[], setters: Setter[], scope: Sco
 const writeProperties = (properties: Property[], scope: Scope, writer: Writer): void => {
     for (const property of properties) {
         if (includeSecondLevel(scope.name, property.name)) {
-            writer.writeLine("  " + typeToString(property.type, scope) + " " + property.name + ";");
+            const getterScope = <Scope>{
+                kind: ScopeKind.getter,
+                name: property.name,
+                parent: scope
+            };
+            writer.writeLine("  external " + (property.isStatic ? "static " : "") + typeToString(property.type, getterScope) + " get " + property.name + ";");
+            if (!property.isReadOnly) {
+                const setterScope = <Scope>{
+                    kind: ScopeKind.setter,
+                    name: property.name,
+                    parent: scope
+                };
+                const param: Parameter = {
+                    name: property.name,
+                    type: property.type,
+                    optional: false,
+                    doc: "TODO"
+                };
+
+                writer.writeLine("  external " + (property.isStatic ? "static " : "") + "set " + property.name + "(" + parameterToString(param, setterScope) + ");");
+            }
         }
     }
 }
@@ -283,8 +303,8 @@ const writeClass = (clazz: Class, writer: Writer): void => {
 
     writer.writeLine();
     writer.writeLine("@JS()");
-    if (clazz.modifiers.length > 0) {
-        writer.writeToken(clazz.modifiers.join(" ") + " ");
+    if (clazz.isAbstract) {
+        writer.writeToken("abstract ");
     }
     writer.writeToken("class " + clazz.name);
     if (clazz.typeParams.length > 0) {
@@ -292,6 +312,9 @@ const writeClass = (clazz: Class, writer: Writer): void => {
     }
     if (clazz.superType) {
         writer.writeToken(" extends " + typeToString(clazz.superType, null));
+    }
+    if (clazz.interfaces.length > 0) {
+        writer.writeToken(" implements " + clazz.interfaces.map(i => typeToString(i, null)).join(", "));
     }
     writer.writeLine(" {");
     for (const ctor of clazz.constructors) {
@@ -303,7 +326,6 @@ const writeClass = (clazz: Class, writer: Writer): void => {
         writeMethod(method, scope, writer);
     }
     writer.writeLine("}");
-    writer.writeLine();
     writer.toFile();
 }
 
@@ -339,7 +361,6 @@ const writeInterface = (interfaze: Interface, writer: Writer): void => {
         writeMethod(method, scope, writer);
     }
     writer.writeLine("}");
-    writer.writeLine();
     writer.toFile();
 }
 

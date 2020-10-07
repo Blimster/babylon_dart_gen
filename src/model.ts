@@ -21,6 +21,8 @@ export interface FunctionType extends Type {
 }
 
 export interface Property {
+    isStatic: boolean;
+    isReadOnly: boolean;
     name: string;
     type: Type;
 }
@@ -70,8 +72,9 @@ export interface ClassOrInterface {
 }
 
 export interface Class extends ClassOrInterface {
-    modifiers: string[];
+    isAbstract: boolean;
     superType: TypeType;
+    interfaces: TypeType[];
     constructors: Constructor[];
     getters: Getter[];
     setters: Setter[];
