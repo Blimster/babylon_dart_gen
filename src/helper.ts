@@ -1,5 +1,17 @@
 import { config } from "./config";
-import { Class, FunctionType, Interface, Library, Parameter, Scope, ScopeKind, Type, TypeKind, TypeLiteralType, TypeType } from "./model";
+import { Class, FunctionType, Interface, Library, Method, Parameter, Property, Scope, ScopeKind, Type, TypeKind, TypeLiteralType, TypeType } from "./model";
+
+export const mapToObject = (map: Map<any, any>, switchKeyValue: boolean = false) => {
+    const result = {};
+    map.forEach((k, v) => {
+        if (switchKeyValue) {
+            result[v] = k;
+        } else {
+            result[k] = v;
+        }
+    });
+    return result;
+};
 
 export const parseConfigType = (type: string): TypeType => {
     type = type.trim();
@@ -24,6 +36,107 @@ export const parseConfigType = (type: string): TypeType => {
         typeParameters
     };
 }
+
+const handleThisType = (type: TypeType, scope: Scope): string => {
+    if (type.name === 'this') {
+        const classScope = firstScopeOfKind(scope, ScopeKind.clazz);
+        if (classScope) {
+            return classScope.name;
+        }
+    }
+    return type.name;
+}
+
+const isMatchingType = (type1: Type, type2: Type): boolean => {
+    if (isTypeType(type1) && isTypeType(type2)) {
+        if (type1.name.startsWith("#") || type2.name.startsWith("#")) {
+            return true;
+        }
+        if (type1.name !== type2.name) {
+            return false;
+        }
+        if (type1.typeParameters.length !== type2.typeParameters.length) {
+            return false;
+        }
+        for (let i = 0; i < type1.typeParameters.length; i++) {
+            if (!isMatchingType(type1.typeParameters[i], type2.typeParameters[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+const typeOfPlaceholder = (type: Type, typeReplacement: Type, placeholder: string): Type => {
+    if (isTypeType(type) && isTypeType(typeReplacement)) {
+        if (typeReplacement.name === placeholder) {
+            return type;
+        }
+
+        for (let i = 0; i < typeReplacement.typeParameters.length; i++) {
+            const r = typeOfPlaceholder(type.typeParameters[i], typeReplacement.typeParameters[i], placeholder);
+            if (r) {
+                return r;
+            }
+        }
+    }
+    return null;
+}
+
+export const replaceType = (type: Type, scope: Scope, typeReplacements: any): Type => {
+    if (isTypeType(type)) {
+        for (const tr in typeReplacements) {
+            const replacementType = parseConfigType(tr);
+            const typeParamReplacements = type.typeParameters.map(t => replaceType(t, scope, typeReplacements));
+            type.typeParameters = typeParamReplacements;
+            if (isMatchingType(type, replacementType)) {
+                let replacement = typeReplacements[tr];
+                const tokens = replacement.match(/#[0-9]+/g);
+                if (tokens) {
+                    for (const token of tokens) {
+                        const placeHolderType = typeOfPlaceholder(type, replacementType, token);
+                        replacement = replacement.replace(token, typeToString(placeHolderType, scope));
+                    }
+                }
+                const result = parseConfigType(replacement);
+                result.isArray = type.isArray;
+                return result;
+            }
+        }
+    }
+    return type;
+}
+
+export const typeToString = (type: Type, scope: Scope): string => {
+    type = replaceType(type, scope, config.typeReplacements);
+    if (isTypeType(type)) {
+        let result = "";
+        if (type.isArray) {
+            result += "List<";
+        }
+        result += handleThisType(type, scope);
+        if (type.typeParameters && type.typeParameters.length > 0) {
+            result += "<";
+            result += type.typeParameters.map(t => typeToString(t, scope)).join(", ");
+            result += ">";
+        }
+        if (type.isArray) {
+            result += ">";
+        }
+
+        return result;
+    } else if (isFunctionType(type)) {
+        return typeToString(type.returnType, scope) + " Function(" + (type.parameters.map(p => typeToString(p.type, scope) + " " + p.name)).join(", ") + ")";
+    } else if (isTypeLiteralType(type)) {
+        if (type.properties.length > 0 && type.callSignatures.length === 0) {
+            return typeLiteralNameFromScope(scope);
+        } else if (type.properties.length === 0 && type.callSignatures.length === 1) {
+            return typeToString(type.callSignatures[0], scope);
+        }
+    }
+    return "UNSUPPORTED: " + type.kind;
+};
 
 export const includeTopLevel = (name: string): boolean => {
     return !!config.include[name];
@@ -130,33 +243,37 @@ export const extendedInterfaces = (library: Library, interfaze: Interface, inter
     }
 }
 
-export const missingGettersAndSetters = (library: Library, clazz: Class, interfaces: Interface[], properties: Map<string, [boolean, boolean]>): Map<string, [boolean, boolean]> => {
+export const missingGettersAndSetters = (library: Library, clazz: Class, interfaces: Interface[], properties: Map<string, { getter: boolean, setter: boolean, property: Property }>): Map<string, { getter: boolean, setter: boolean, property: Property }> => {
     if (clazz) {
         for (const interfaze of interfaces) {
             for (const property of interfaze.properties) {
-                const getterSetter: [boolean, boolean] = [true, true];
+                const getterSetterProperty = {
+                    getter: true,
+                    setter: true,
+                    property
+                };
                 for (const getter of clazz.getters) {
                     if (getter.name === property.name) {
-                        getterSetter[0] = false;
+                        getterSetterProperty.getter = false;
                     }
                 }
                 for (const setter of clazz.setters) {
                     if (setter.name === property.name) {
-                        getterSetter[1] = false;
+                        getterSetterProperty.setter = false;
                     }
                 }
                 for (const prop of clazz.properties) {
                     if (prop.name === property.name) {
-                        getterSetter[0] = false;
-                        getterSetter[1] = false;
+                        getterSetterProperty.getter = false;
+                        getterSetterProperty.setter = false;
                     }
                 }
                 let currentGetterSetter = properties.get(property.name);
                 if (currentGetterSetter) {
-                    currentGetterSetter[0] = currentGetterSetter[0] && getterSetter[0];
-                    currentGetterSetter[1] = currentGetterSetter[1] && getterSetter[1];
+                    currentGetterSetter.getter = currentGetterSetter.getter && getterSetterProperty.getter;
+                    currentGetterSetter.setter = currentGetterSetter.setter && getterSetterProperty.setter;
                 } else {
-                    properties.set(property.name, getterSetter);
+                    properties.set(property.name, getterSetterProperty);
                 }
             }
         }
@@ -165,4 +282,32 @@ export const missingGettersAndSetters = (library: Library, clazz: Class, interfa
         }
     }
     return properties;
+}
+
+export const missingMethods = (library: Library, clazz: Class, interfaces: Interface[], methods: Map<string, { missing: boolean, method: Method }>): Map<string, { missing: boolean, method: Method }> => {
+    if (clazz) {
+        for (const interfaze of interfaces) {
+            for (const method of interfaze.methods) {
+                let missing = true;
+                for (const clazzMethod of clazz.methods) {
+                    if (clazzMethod.name === method.name) {
+                        missing = false;
+                    }
+                }
+                let currentMissingMethod = methods.get(method.name);
+                if (currentMissingMethod) {
+                    currentMissingMethod.missing = currentMissingMethod.missing && missing;
+                } else {
+                    methods.set(method.name, {
+                        missing,
+                        method
+                    });
+                }
+            }
+        }
+        if (clazz.superType) {
+            missingMethods(library, classByName(clazz.superType.name, library), interfaces, methods);
+        }
+    }
+    return methods;
 }

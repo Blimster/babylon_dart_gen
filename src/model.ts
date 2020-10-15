@@ -25,10 +25,12 @@ export interface Property {
     isReadOnly: boolean;
     name: string;
     type: Type;
+    doc: string;
 }
 
 export interface TypeLiteralType extends Type {
     properties: Property[];
+    callSignatures: FunctionType[];
 }
 
 export interface Parameter {
@@ -38,15 +40,19 @@ export interface Parameter {
     doc: string;
 }
 
+// TODO parse isStatic
 export interface Getter {
     name: string;
     returnType: Type;
+    isStatic: boolean;
     doc: string;
 }
 
+// TODO parse isStatic
 export interface Setter {
     name: string;
     parameter: Parameter;
+    isStatic: boolean;
     doc: string;
 }
 
@@ -67,6 +73,7 @@ export interface Constructor {
 export interface ClassOrInterface {
     name: string;
     typeParams: string[];
+    constructors: Constructor[];
     properties: Property[];
     methods: Method[];
 }
@@ -75,7 +82,6 @@ export interface Class extends ClassOrInterface {
     isAbstract: boolean;
     superType: TypeType;
     interfaces: TypeType[];
-    constructors: Constructor[];
     getters: Getter[];
     setters: Setter[];
 }

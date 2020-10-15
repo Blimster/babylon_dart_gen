@@ -1,6 +1,6 @@
 import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface } from "./model"
 import { config } from "./config";
-import { firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, parseConfigType, typeLiteralNameFromScope } from "./helper";
+import { firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, parseConfigType, replaceType, typeLiteralNameFromScope, typeToString } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 class Writer {
@@ -25,101 +25,6 @@ class Writer {
         writeFileSync(outFolder + "/" + this.fileName, content);
     }
 }
-
-const isMatchingType = (type1: Type, type2: Type): boolean => {
-    if (isTypeType(type1) && isTypeType(type2)) {
-        if (type1.name.startsWith("#") || type2.name.startsWith("#")) {
-            return true;
-        }
-        if (type1.name !== type2.name) {
-            return false;
-        }
-        if (type1.typeParameters.length !== type2.typeParameters.length) {
-            return false;
-        }
-        for (let i = 0; i < type1.typeParameters.length; i++) {
-            if (!isMatchingType(type1.typeParameters[i], type2.typeParameters[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
-const typeOfPlaceholder = (type: Type, typeReplacement: Type, placeholder: string): Type => {
-    if (isTypeType(type) && isTypeType(typeReplacement)) {
-        if (typeReplacement.name === placeholder) {
-            return type;
-        }
-
-        for (let i = 0; i < typeReplacement.typeParameters.length; i++) {
-            const r = typeOfPlaceholder(type.typeParameters[i], typeReplacement.typeParameters[i], placeholder);
-            if (r) {
-                return r;
-            }
-        }
-    }
-    return null;
-}
-
-const replaceType = (type: Type, scope: Scope): Type => {
-    if (isTypeType(type)) {
-        for (const tr in config.typeReplacements) {
-            const replacementType = parseConfigType(tr);
-            if (isMatchingType(type, replacementType)) {
-                let replacement = config.typeReplacements[tr];
-                const tokens = replacement.match(/#[0-9]+/g);
-                if (tokens) {
-                    for (const token of tokens) {
-                        const placeHolderType = typeOfPlaceholder(type, replacementType, token);
-                        replacement = replacement.replace(token, typeToString(placeHolderType, scope));
-                    }
-                }
-                const result = parseConfigType(replacement);
-                result.isArray = type.isArray;
-                return result;
-            }
-        }
-    }
-    return type;
-}
-
-const handleThisType = (type: TypeType, scope: Scope): string => {
-    if (type.name === 'this') {
-        const classScope = firstScopeOfKind(scope, ScopeKind.clazz);
-        if (classScope) {
-            return classScope.name;
-        }
-    }
-    return type.name;
-}
-
-const typeToString = (type: Type, scope: Scope): string => {
-    type = replaceType(type, scope);
-    if (isTypeType(type)) {
-        let result = "";
-        if (type.isArray) {
-            result += "List<";
-        }
-        result += handleThisType(type, scope);
-        if (type.typeParameters && type.typeParameters.length > 0) {
-            result += "<";
-            result += type.typeParameters.map(t => typeToString(t, scope)).join(", ");
-            result += ">";
-        }
-        if (type.isArray) {
-            result += ">";
-        }
-
-        return result;
-    } else if (isFunctionType(type)) {
-        return typeToString(type.returnType, scope) + " Function(" + (type.parameters.map(p => typeToString(p.type, scope) + " " + p.name)).join(", ") + ")";
-    } else if (isTypeLiteralType(type)) {
-        return typeLiteralNameFromScope(scope);
-    }
-    return "UNSUPPORTED: " + type.kind;
-};
 
 const parameterToString = (parameter: Parameter, scope: Scope): string => {
     const paramScope = <Scope>{
@@ -174,25 +79,29 @@ const writeGetter = (getter: Getter, scope: Scope, writer: Writer): void => {
 }
 
 const writeSetter = (setter: Setter, scope: Scope, writer: Writer): void => {
-    const getterScope = <Scope>{
+    const setterScope = <Scope>{
         kind: ScopeKind.setter,
         name: setter.name,
         parent: scope
     };
-    writer.writeLine("  external set " + setter.name + "(" + parameterToString(setter.parameter, scope) + ");");
+    writer.writeLine("  external set " + setter.name + "(" + parameterToString(setter.parameter, setterScope) + ");");
 }
 
-const writeGettersAndSetters = (getters: Getter[], setters: Setter[], scope: Scope, writer: Writer): void => {
-    for (const getter of getters) {
+const writeGettersAndSetters = (library: Library, clazz: Class, scope: Scope, writer: Writer): void => {
+    for (const getter of clazz.getters) {
         if (includeSecondLevel(scope.name, getter.name)) {
             writeGetter(getter, scope, writer);
         }
     }
-    for (const setter of setters) {
+    for (const setter of clazz.setters) {
         if (includeSecondLevel(scope.name, setter.name)) {
             writeSetter(setter, scope, writer);
         }
     }
+}
+
+const writeProperty = (property: Property, scope: Scope, writer: Writer): void => {
+    writer.writeLine("  " + typeToString(property.type, scope) + " " + property.name + ";");
 }
 
 const writeProperties = (properties: Property[], scope: Scope, writer: Writer): void => {
@@ -203,22 +112,7 @@ const writeProperties = (properties: Property[], scope: Scope, writer: Writer): 
                 name: property.name,
                 parent: scope
             };
-            writer.writeLine("  external " + (property.isStatic ? "static " : "") + typeToString(property.type, getterScope) + " get " + property.name + ";");
-            if (!property.isReadOnly) {
-                const setterScope = <Scope>{
-                    kind: ScopeKind.setter,
-                    name: property.name,
-                    parent: scope
-                };
-                const param: Parameter = {
-                    name: property.name,
-                    type: property.type,
-                    optional: false,
-                    doc: "TODO"
-                };
-
-                writer.writeLine("  external " + (property.isStatic ? "static " : "") + "set " + property.name + "(" + parameterToString(param, setterScope) + ");");
-            }
+            writeProperty(property, scope, writer);
         }
     }
 }
@@ -237,6 +131,8 @@ const typeLiteralsForTypeLiteral = (type: TypeLiteralType, scope: Scope, result:
     });
 }
 
+// TODO move to sanitizer
+// TODO support functions
 const typeLiteralsForClassOrInterface = (clazz: ClassOrInterface): { [key: string]: TypeLiteralType } => {
     const result = <{ [key: string]: TypeLiteralType }>{};
     const classScope = <Scope>{
@@ -269,22 +165,24 @@ const typeLiteralsForClassOrInterface = (clazz: ClassOrInterface): { [key: strin
 }
 
 const writeTypeLiteral = (name: string, typeLiteral: TypeLiteralType, scope: Scope, writer: Writer): void => {
-    writer.writeLine("@JS()");
-    writer.writeLine("@anonymous");
-    writer.writeLine("class " + name + " {");
-    writer.writeLine("  external factory " + name + "({" + typeLiteral.properties.map(tl => typeToString(tl.type, scope) + " " + tl.name).join(", ") + "});");
-    typeLiteral.properties.forEach(prop => {
-        const propertyScope = <Scope>{
-            kind: ScopeKind.property,
-            name: prop.name,
-            parent: scope
-        };
-        writer.writeLine("  external " + typeToString(prop.type, propertyScope) + " get " + prop.name + ";");
-    });
-    writer.writeLine("}");
+    if (typeLiteral.properties.length > 0 && typeLiteral.callSignatures.length === 0) {
+        writer.writeLine("@JS()");
+        writer.writeLine("@anonymous");
+        writer.writeLine("class " + name + " {");
+        writer.writeLine("  external factory " + name + "({" + typeLiteral.properties.map(tl => typeToString(tl.type, scope) + " " + tl.name).join(", ") + "});");
+        typeLiteral.properties.forEach(prop => {
+            const propertyScope = <Scope>{
+                kind: ScopeKind.property,
+                name: prop.name,
+                parent: scope
+            };
+            writer.writeLine("  external " + typeToString(prop.type, propertyScope) + " get " + prop.name + ";");
+        });
+        writer.writeLine("}");
+    }
 }
 
-const writeClass = (clazz: Class, writer: Writer): void => {
+const writeClass = (library: Library, clazz: Class, writer: Writer): void => {
     const scope = <Scope>{
         kind: ScopeKind.clazz,
         name: clazz.name
@@ -321,7 +219,7 @@ const writeClass = (clazz: Class, writer: Writer): void => {
         writeConstructor(ctor, scope, writer);
     }
     writeProperties(clazz.properties, scope, writer);
-    writeGettersAndSetters(clazz.getters, clazz.setters, scope, writer);
+    writeGettersAndSetters(library, clazz, scope, writer);
     for (const method of clazz.methods) {
         writeMethod(method, scope, writer);
     }
@@ -356,6 +254,9 @@ const writeInterface = (interfaze: Interface, writer: Writer): void => {
         writer.writeToken(" extends " + interfaze.superTypes.map(t => typeToString(t, null)).join(", "));
     }
     writer.writeLine(" {");
+    for (const ctor of interfaze.constructors) {
+        writeConstructor(ctor, scope, writer);
+    }
     writeProperties(interfaze.properties, scope, writer);
     for (const method of interfaze.methods) {
         writeMethod(method, scope, writer);
@@ -366,7 +267,7 @@ const writeInterface = (interfaze: Interface, writer: Writer): void => {
 
 export const writeLibrary = (library: Library): void => {
     for (const clazz of library.classes) {
-        writeClass(clazz, new Writer(clazz.name.toLowerCase() + ".dart"));
+        writeClass(library, clazz, new Writer(clazz.name.toLowerCase() + ".dart"));
     }
     for (const interfaze of library.interfaces) {
         writeInterface(interfaze, new Writer(interfaze.name.toLowerCase() + ".dart"));

@@ -33,7 +33,8 @@ const parseProperty = (node: ts.PropertyDeclaration | ts.PropertySignature, chec
                 isStatic,
                 isReadOnly,
                 name: node.name.getText(),
-                type: parseType(node.type, checker)
+                type: parseType(node.type, checker),
+                doc: "TODO"
             }
         }
         return {
@@ -45,7 +46,8 @@ const parseProperty = (node: ts.PropertyDeclaration | ts.PropertySignature, chec
                 name: "dynamic",
                 isArray: false,
                 typeParameters: []
-            }
+            },
+            doc: "TODO"
         }
     }
     return null;
@@ -69,14 +71,15 @@ const parseProperties = (node: ts.Node, checker: ts.TypeChecker, debug?: boolean
 }
 
 
-const parseType = (typeNode: ts.TypeNode, checker: ts.TypeChecker): Type => {
+const parseType = (typeNode: ts.Node, checker: ts.TypeChecker): Type => {
     if (ts.isArrayTypeNode(typeNode)) {
         const elementType = parseType(typeNode.elementType, checker);
         if (isTypeType(elementType)) {
+            const elementType = (parseType(typeNode.elementType, checker) as TypeType);
             return <TypeType>{
                 kind: TypeKind.type,
-                name: (parseType(typeNode.elementType, checker) as TypeType).name,
-                typeParameters: [],
+                name: elementType.name,
+                typeParameters: elementType.typeParameters,
                 isArray: true
             }
         }
@@ -89,16 +92,26 @@ const parseType = (typeNode: ts.TypeNode, checker: ts.TypeChecker): Type => {
         }
     } else if (ts.isTypeLiteralNode(typeNode)) {
         const properties: Property[] = [];
+        const callSignatures: FunctionType[] = [];
         typeNode.members.forEach(m => {
             if (ts.isPropertySignature(m)) {
                 properties.push(parseProperty(m, checker));
+            } else if (ts.isCallSignatureDeclaration(m)) {
+                callSignatures.push(parseType(m, checker) as FunctionType);
             }
         });
         return <TypeLiteralType>{
             kind: TypeKind.typeLiteral,
-            properties
+            properties,
+            callSignatures
         };
     } else if (ts.isFunctionTypeNode(typeNode)) {
+        return <FunctionType>{
+            kind: TypeKind.function,
+            returnType: parseType(typeNode.type, checker),
+            parameters: parseParameters(typeNode.parameters, checker)
+        };
+    } else if (ts.isCallSignatureDeclaration(typeNode)) {
         return <FunctionType>{
             kind: TypeKind.function,
             returnType: parseType(typeNode.type, checker),
@@ -109,6 +122,13 @@ const parseType = (typeNode: ts.TypeNode, checker: ts.TypeChecker): Type => {
             kind: TypeKind.type,
             name: typeNode.expression.getText(),
             typeParameters: typeNode.typeArguments ? typeNode.typeArguments.map(ta => parseType(ta, checker)) : [],
+            isArray: false
+        };
+    } else if (ts.isUnionTypeNode(typeNode)) {
+        return <TypeType>{
+            kind: TypeKind.type,
+            name: "dynamic",
+            typeParameters: [],
             isArray: false
         };
     } else {
@@ -122,7 +142,6 @@ const parseType = (typeNode: ts.TypeNode, checker: ts.TypeChecker): Type => {
 }
 
 const parseParameter = (parameter: ts.ParameterDeclaration, checker: ts.TypeChecker): Parameter => {
-    //console.log(parameter.type.getText() + " -> " + parameter.type.kind);
     return {
         name: parameter.name.getText(),
         type: parseType(parameter.type, checker),
@@ -159,6 +178,7 @@ const parseGetters = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Gette
                 result.push({
                     name: n.name.getText(),
                     returnType: parseType(n.type, checker),
+                    isStatic: false,
                     doc: ts.displayPartsToString(symbol.getDocumentationComment(checker))
                 });
             }
@@ -176,6 +196,7 @@ const parseSetters = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Sette
                 result.push({
                     name: n.name.getText(),
                     parameter: parseParameter(n.parameters[0], checker),
+                    isStatic: false,
                     doc: ts.displayPartsToString(symbol.getDocumentationComment(checker))
                 });
             }
@@ -285,6 +306,7 @@ const parseInterface = (node: ts.InterfaceDeclaration, checker: ts.TypeChecker):
                 name: node.name.getText(),
                 typeParams,
                 superTypes,
+                constructors: [],
                 properties: parseProperties(node, checker),
                 methods: parseMethods(node, checker)
             };
