@@ -24,7 +24,7 @@ export const config = <Config>{
         "Partial<#1>": "#1",
         "HTMLElement": "HtmlElement"
     },
-    include: {
+    secondLevelConfigs: {
         AbstractActionManager: {
             exclude: [
                 "Triggers", // type literal not generated
@@ -36,6 +36,9 @@ export const config = <Config>{
                 "normalizeToUnitCube", // nullable function type
                 "intersects", // not yet generatedd
                 "intersectsMesh", // union type
+                "instancedBuffers", // unsupported
+                "edgesRenderer", // not yet generated
+                "createOrUpdateSubmeshesOctree", // not yet generated
             ]
         },
         AbstractScene: {
@@ -45,7 +48,9 @@ export const config = <Config>{
                 "AddParser", // type not yet generated
                 "GetParser", // type not yet generated
                 "AddIndividualParser", // type not yet generated
-                "GetIndividualParser" // type not yet generated
+                "GetIndividualParser", // type not yet generated
+                "proceduralTextures", // not yet generated
+                "sounds", // not yet generated
             ]
         },
         ActionManager: {},
@@ -76,6 +81,7 @@ export const config = <Config>{
                 "computeWorldMatrix", // invalid override
             ]
         },
+        CannonJSPlugin: {},
         Color3: {
             exclude: [
                 'clampToRef' // union type
@@ -97,6 +103,7 @@ export const config = <Config>{
                 "dispose"
             ]
         },
+        EffectLayer: {},
         EventState: {},
         ExponentialEase: {},
         FramingBehavior: {
@@ -121,8 +128,10 @@ export const config = <Config>{
                 "getVertexBuffers", // Nullable<> on return type
             ]
         },
+        GlowLayer: {},
         GroundMesh: {},
         HemisphericLight: {},
+        HighlightLayer: {},
         IAction: {},
         IActionEvent: {},
         IAnimatable: {},
@@ -131,10 +140,22 @@ export const config = <Config>{
         IDisposable: {},
         IEasingFunction: {},
         IGetSetVerticesData: {},
+        IGlowLayerOptions: {},
+        IHighlightLayerOptions: {},
         IImageProcessingConfigurationDefines: {},
+        IMotorEnabledJoint: {},
         ImageProcessingConfiguration: {},
         InstancedMesh: {},
         IntersectionInfo: {},
+        IPhysicsEnabledObject: {
+            exclude: [
+                "rotate", // not yet generatd
+                "translate", // not yet generatd
+            ]
+        },
+        IPhysicsEnginePlugin: {
+            include: [] // CannonJSPlugin does not implement many methods
+        },
         IPlaneLike: {},
         IShadowGenerator: {
             exclude: [
@@ -144,6 +165,9 @@ export const config = <Config>{
         },
         IShadowLight: {},
         IVector3Like: {},
+        Layer: {},
+        LensFlare: {},
+        LensFlareSystem: {},
         Light: {
             exclude: [
                 "GetConstructorFromName", // Nullable<> on function type
@@ -180,6 +204,7 @@ export const config = <Config>{
                 "validateSkinning", // not yet generated
                 "MinMax", // not yet generated
                 "Center", // union type
+                "simplify", // not yet implemented
             ]
         },
         MeshBuilder: {},
@@ -198,6 +223,23 @@ export const config = <Config>{
         },
         Observable: {},
         Observer: {},
+        PhysicsImpostor: {
+            exclude: [
+                "onCollideEvent", // nullable function type
+                "onCollide", // not yet generated
+            ]
+        },
+        PhysicsImpostorJoint: {},
+        PhysicsImpostorParameters: {
+            treatAsTypeLiteral: true
+        },
+        PhysicsJoint: {},
+        PhysicsJointData: {},
+        PhysicsRaycastResult: {
+            exclude: [
+                "setHitData", // not yet generated
+            ]
+        },
         PickingInfo: {},
         Plane: {},
         PointLight: {},
@@ -207,6 +249,7 @@ export const config = <Config>{
         PushMaterial: {},
         Quaternion: {},
         Ray: {},
+        ReflectionProbe: {},
         ShadowLight: {},
         Sprite: {
             exclude: [

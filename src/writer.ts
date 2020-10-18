@@ -1,6 +1,6 @@
-import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface } from "./model"
+import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface, TypeKind } from "./model"
 import { config } from "./config";
-import { firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, parseConfigType, replaceType, typeLiteralNameFromScope, typeToString } from "./helper";
+import { firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, methodToFunctionType, parseConfigType, replaceType, treatAsTypeLiteral, typeLiteralNameFromScope, typeToString } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 class Writer {
@@ -75,7 +75,7 @@ const writeGetter = (getter: Getter, scope: Scope, writer: Writer): void => {
         name: getter.name,
         parent: scope
     };
-    writer.writeLine("  external " + typeToString(getter.returnType, getterScope) + " get " + getter.name + ";");
+    writer.writeLine("  external " + (getter.isStatic ? "static " : "") + typeToString(getter.returnType, getterScope) + " get " + getter.name + ";");
 }
 
 const writeSetter = (setter: Setter, scope: Scope, writer: Writer): void => {
@@ -84,16 +84,16 @@ const writeSetter = (setter: Setter, scope: Scope, writer: Writer): void => {
         name: setter.name,
         parent: scope
     };
-    writer.writeLine("  external set " + setter.name + "(" + parameterToString(setter.parameter, setterScope) + ");");
+    writer.writeLine("  external " + (setter.isStatic ? "static " : "") + "set " + setter.name + "(" + parameterToString(setter.parameter, setterScope) + ");");
 }
 
-const writeGettersAndSetters = (library: Library, clazz: Class, scope: Scope, writer: Writer): void => {
-    for (const getter of clazz.getters) {
+const writeGettersAndSetters = (library: Library, clazzOrInterfaze: ClassOrInterface, scope: Scope, writer: Writer): void => {
+    for (const getter of clazzOrInterfaze.getters) {
         if (includeSecondLevel(scope.name, getter.name)) {
             writeGetter(getter, scope, writer);
         }
     }
-    for (const setter of clazz.setters) {
+    for (const setter of clazzOrInterfaze.setters) {
         if (includeSecondLevel(scope.name, setter.name)) {
             writeSetter(setter, scope, writer);
         }
@@ -200,6 +200,7 @@ const writeClass = (library: Library, clazz: Class, writer: Writer): void => {
     });
 
     writer.writeLine();
+    writer.writeLine("/// class " + clazz.name);
     writer.writeLine("@JS()");
     if (clazz.isAbstract) {
         writer.writeToken("abstract ");
@@ -215,54 +216,95 @@ const writeClass = (library: Library, clazz: Class, writer: Writer): void => {
         writer.writeToken(" implements " + clazz.interfaces.map(i => typeToString(i, null)).join(", "));
     }
     writer.writeLine(" {");
-    for (const ctor of clazz.constructors) {
-        writeConstructor(ctor, scope, writer);
+    if (!clazz.isAbstract) {
+        for (const ctor of clazz.constructors) {
+            writeConstructor(ctor, scope, writer);
+        }
     }
     writeProperties(clazz.properties, scope, writer);
     writeGettersAndSetters(library, clazz, scope, writer);
     for (const method of clazz.methods) {
         writeMethod(method, scope, writer);
     }
+    // interface merging
+    const extraPropertiesAndMethods: string[] = [];
+    for (const interfaze of library.interfaces) {
+        if (interfaze.isExported === false && interfaze.name === clazz.name) {
+            for (const property of interfaze.properties) {
+                if (includeSecondLevel(scope.name, property.name)) {
+                    if (extraPropertiesAndMethods.indexOf(property.name) === -1) {
+                        extraPropertiesAndMethods.push(property.name);
+                        const getterScope = <Scope>{
+                            kind: ScopeKind.getter,
+                            name: property.name,
+                            parent: scope
+                        };
+                        writeProperty(property, scope, writer);
+                    }
+                }
+            }
+            for (const method of interfaze.methods) {
+                if (extraPropertiesAndMethods.indexOf(method.name) === -1) {
+                    extraPropertiesAndMethods.push(method.name);
+                    writeMethod(method, scope, writer);
+                }
+            }
+        }
+    }
+
     writer.writeLine("}");
     writer.toFile();
 }
 
-const writeInterface = (interfaze: Interface, writer: Writer): void => {
-    const scope = <Scope>{
-        kind: ScopeKind.clazz,
-        name: interfaze.name
-    };
+const writeInterface = (library: Library, interfaze: Interface, writer: Writer): void => {
+    if (interfaze.isExported) {
+        const scope = <Scope>{
+            kind: ScopeKind.clazz,
+            name: interfaze.name
+        };
 
-    writer.writeLine("part of " + config.libraryName + ";");
-
-    const typeLiterals = typeLiteralsForClassOrInterface(interfaze);
-    Object.keys(typeLiterals).forEach(name => {
+        writer.writeLine("part of " + config.libraryName + ";");
         writer.writeLine();
-        writeTypeLiteral(name, typeLiterals[name], {
-            kind: ScopeKind.typeLiteral,
-            name: name
-        }, writer);
-    });
 
-    writer.writeLine();
-    writer.writeLine("@JS()");
-    writer.writeToken("abstract class " + interfaze.name);
-    if (interfaze.typeParams.length > 0) {
-        writer.writeToken("<" + interfaze.typeParams.join(", ") + ">");
+        if (treatAsTypeLiteral(interfaze.name)) {
+            const typeLiteral: TypeLiteralType = {
+                kind: TypeKind.function,
+                properties: interfaze.properties,
+                callSignatures: interfaze.methods.map(m => methodToFunctionType(m))
+            }
+            writeTypeLiteral(interfaze.name, typeLiteral, scope, writer);
+        } else {
+            const typeLiterals = typeLiteralsForClassOrInterface(interfaze);
+            Object.keys(typeLiterals).forEach(name => {
+                writer.writeLine();
+                writeTypeLiteral(name, typeLiterals[name], {
+                    kind: ScopeKind.typeLiteral,
+                    name: name
+                }, writer);
+            });
+
+            writer.writeLine("/// interface " + interfaze.name);
+            writer.writeLine("@JS()");
+            writer.writeToken("abstract class " + interfaze.name);
+            if (interfaze.typeParams.length > 0) {
+                writer.writeToken("<" + interfaze.typeParams.join(", ") + ">");
+            }
+            if (interfaze.superTypes.length > 0) {
+                writer.writeToken(" extends " + interfaze.superTypes.map(t => typeToString(t, null)).join(", "));
+            }
+            writer.writeLine(" {");
+            for (const ctor of interfaze.constructors) {
+                writeConstructor(ctor, scope, writer);
+            }
+            writeProperties(interfaze.properties, scope, writer);
+            writeGettersAndSetters(library, interfaze, scope, writer);
+            for (const method of interfaze.methods) {
+                writeMethod(method, scope, writer);
+            }
+            writer.writeLine("}");
+        }
+        writer.toFile();
     }
-    if (interfaze.superTypes.length > 0) {
-        writer.writeToken(" extends " + interfaze.superTypes.map(t => typeToString(t, null)).join(", "));
-    }
-    writer.writeLine(" {");
-    for (const ctor of interfaze.constructors) {
-        writeConstructor(ctor, scope, writer);
-    }
-    writeProperties(interfaze.properties, scope, writer);
-    for (const method of interfaze.methods) {
-        writeMethod(method, scope, writer);
-    }
-    writer.writeLine("}");
-    writer.toFile();
 }
 
 export const writeLibrary = (library: Library): void => {
@@ -270,6 +312,6 @@ export const writeLibrary = (library: Library): void => {
         writeClass(library, clazz, new Writer(clazz.name.toLowerCase() + ".dart"));
     }
     for (const interfaze of library.interfaces) {
-        writeInterface(interfaze, new Writer(interfaze.name.toLowerCase() + ".dart"));
+        writeInterface(library, interfaze, new Writer(interfaze.name.toLowerCase() + ".dart"));
     }
 }

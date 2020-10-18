@@ -28,6 +28,33 @@ const convertClassPropertiesToGettersAndSetters = (library: Library): void => {
     }
 }
 
+const convertInterfacePropertiesToGettersAndSetters = (library: Library): void => {
+    for (const interfaze of library.interfaces) {
+        for (const property of interfaze.properties) {
+            interfaze.getters.push({
+                name: property.name,
+                returnType: property.type,
+                isStatic: property.isStatic,
+                doc: property.doc
+            });
+            if (!property.isReadOnly) {
+                interfaze.setters.push({
+                    name: property.name,
+                    parameter: {
+                        name: property.name,
+                        type: property.type,
+                        optional: false,
+                        doc: property.doc
+                    },
+                    isStatic: property.isStatic,
+                    doc: property.doc
+                });
+            }
+        }
+        interfaze.properties = [];
+    }
+}
+
 const addMissingGettersAndSetters = (library: Library): void => {
     for (const clazz of library.classes) {
         const missing = missingGettersAndSetters(library, clazz, implementedInterfaces(library, clazz, new Map()), new Map());
@@ -103,6 +130,20 @@ const addMissingConstructors = (library: Library): void => {
     }
 };
 
+const removeConstructorsFromExtendedClasses = (library: Library): void => {
+    for (const superClazz of library.classes) {
+        let isExtended = false;
+        for (const clazz of library.classes) {
+            if (clazz.superType && clazz.superType.name === superClazz.name) {
+                isExtended = true;
+            }
+        }
+        if (isExtended) {
+            superClazz.constructors = [];
+        }
+    }
+};
+
 const fixInvalidOverrides = (library: Library): void => {
     for (const clazz of library.classes) {
         const interfaces = implementedInterfaces(library, clazz, new Map());
@@ -140,8 +181,10 @@ const fixInvalidOverrides = (library: Library): void => {
 
 export const sanitizeLibrary = (library: Library): Library => {
     convertClassPropertiesToGettersAndSetters(library);
+    //convertInterfacePropertiesToGettersAndSetters(library);
     addMissingGettersAndSetters(library);
-    addMissingConstructors(library);
+    //addMissingConstructors(library);
+    removeConstructorsFromExtendedClasses(library);
     fixInvalidOverrides(library);
     return library;
 }

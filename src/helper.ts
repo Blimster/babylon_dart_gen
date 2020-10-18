@@ -139,14 +139,14 @@ export const typeToString = (type: Type, scope: Scope): string => {
 };
 
 export const includeTopLevel = (name: string): boolean => {
-    return !!config.include[name];
+    return !!config.secondLevelConfigs[name];
 };
 
 export const includeSecondLevel = (topLevelName: string, secondLevelName: string): boolean => {
-    if (!config.include[topLevelName]) {
+    if (!config.secondLevelConfigs[topLevelName]) {
         return false;
     }
-    const secondLevelFilter = config.include[topLevelName];
+    const secondLevelFilter = config.secondLevelConfigs[topLevelName];
     if (secondLevelFilter.exclude && secondLevelFilter.exclude.indexOf(secondLevelName) !== -1) {
         return false;
     }
@@ -154,6 +154,18 @@ export const includeSecondLevel = (topLevelName: string, secondLevelName: string
         return false;
     }
     return true;
+}
+
+export const treatAsTypeLiteral = (name: string): boolean => {
+    const secondLevelConfig = config.secondLevelConfigs[name];
+    return secondLevelConfig && secondLevelConfig.treatAsTypeLiteral;
+}
+
+export const methodToFunctionType = (method: Method): FunctionType => {
+    return <FunctionType>{
+        returnType: method.returnType,
+        parameters: method.parameters
+    };
 }
 
 export const capitalize = (s: string): string => {

@@ -282,7 +282,7 @@ const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class =
 
 const parseInterface = (node: ts.InterfaceDeclaration, checker: ts.TypeChecker): Interface => {
     const symbol = checker.getSymbolAtLocation(node.name);
-    if (includeTopLevel(symbol.getName()) && isExported(node)) {
+    if (includeTopLevel(symbol.getName())) {
         if (!isHidden(symbol.getName())) {
             const typeParams: string[] = [];
             if (node.typeParameters) {
@@ -305,9 +305,12 @@ const parseInterface = (node: ts.InterfaceDeclaration, checker: ts.TypeChecker):
             const interfaze = {
                 name: node.name.getText(),
                 typeParams,
+                isExported: isExported(node),
                 superTypes,
                 constructors: [],
                 properties: parseProperties(node, checker),
+                setters: [],
+                getters: [],
                 methods: parseMethods(node, checker)
             };
             return interfaze;

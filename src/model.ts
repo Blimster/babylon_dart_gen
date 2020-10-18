@@ -76,17 +76,18 @@ export interface ClassOrInterface {
     constructors: Constructor[];
     properties: Property[];
     methods: Method[];
+    getters: Getter[];
+    setters: Setter[];
 }
 
 export interface Class extends ClassOrInterface {
     isAbstract: boolean;
     superType: TypeType;
     interfaces: TypeType[];
-    getters: Getter[];
-    setters: Setter[];
 }
 
 export interface Interface extends ClassOrInterface {
+    isExported: boolean;
     superTypes: TypeType[];
 }
 
@@ -111,7 +112,8 @@ export interface Scope {
     name: string;
 }
 
-export interface SecondLevelFilter {
+export interface SecondLevelConfig {
+    treatAsTypeLiteral?: boolean;
     include?: string[];
     exclude?: string[];
 }
@@ -121,6 +123,6 @@ export interface Config {
     libraryName: string;
     outFolder: string;
     typeReplacements: { [key: string]: string };
-    include: { [key: string]: SecondLevelFilter }
+    secondLevelConfigs: { [key: string]: SecondLevelConfig }
 }
 
