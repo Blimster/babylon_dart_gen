@@ -14,6 +14,7 @@ export const config = <Config>{
         "Float32Array": "Float32List",
         "FloatArray": "Float32List",
         "Uint8Array": "Uint8List",
+        "ArrayBufferView": "List",
         "DataArray": "ByteBuffer",
         "IndicesArray": "Int32List",
         "DeepImmutableObject<#1>": "#1",
@@ -22,7 +23,10 @@ export const config = <Config>{
         "Nullable<#1>": "#1",
         "Array<#1>": "List<#1>",
         "Partial<#1>": "#1",
-        "HTMLElement": "HtmlElement"
+        "HTMLElement": "HtmlElement",
+        "HTMLImageElement": "ImageElement",
+        "HTMLButtonElement": "ButtonElement",
+        "PointerEventInit": "dynamic", // interface for type literal defined by typescript dom lib
     },
     secondLevelConfigs: {
         AbstractActionManager: {
@@ -54,6 +58,11 @@ export const config = <Config>{
             ]
         },
         ActionManager: {},
+        Analyser: {
+            include: [] // not yet generated 
+        },
+        Animatable: {},
+        AnimationPropertiesOverride: {},
         ArcRotateCamera: {
             exclude: [
                 "focusOn", // union type
@@ -69,9 +78,11 @@ export const config = <Config>{
         },
         BackEase: {},
         BaseSubMesh: {},
+        BaseTexture: {},
         Behavior: {},
         BouncingBehavior: {},
         BoundingBox: {},
+        BoundingBoxRenderer: {},
         BoundingInfo: {},
         BoundingSphere: {},
         Camera: {
@@ -82,6 +93,7 @@ export const config = <Config>{
             ]
         },
         CannonJSPlugin: {},
+        Collider: {},
         Color3: {
             exclude: [
                 'clampToRef' // union type
@@ -94,6 +106,9 @@ export const config = <Config>{
         },
         ColorCurves: {},
         DataBuffer: {},
+        DebugLayer: {},
+        DebugLayerTab: {},
+        DepthRenderer: {},
         DetailMapConfiguration: {
             include: []
         },
@@ -104,6 +119,9 @@ export const config = <Config>{
             ]
         },
         EffectLayer: {},
+        EnvironmentHelper: {
+            include: [] // not yet generated
+        },
         EventState: {},
         ExponentialEase: {},
         FramingBehavior: {
@@ -122,12 +140,14 @@ export const config = <Config>{
         FresnelParameters: {
             include: []
         },
+        GamepadManager: {},
         Geometry: {
             exclude: [
                 "extend", // type not yet generated
                 "getVertexBuffers", // Nullable<> on return type
             ]
         },
+        GeometryBufferRenderer: {},
         GlowLayer: {},
         GroundMesh: {},
         HemisphericLight: {},
@@ -136,27 +156,52 @@ export const config = <Config>{
         IActionEvent: {},
         IAnimatable: {},
         IBehaviorAware: {},
+        ICollisionCoordinator: {},
         ICullable: {},
         IDisposable: {},
         IEasingFunction: {},
+        IEnvironmentHelperOptions: {},
+        IExplorerExtensibilityGroup: {},
+        IExplorerExtensibilityOption: {},
         IGetSetVerticesData: {},
         IGlowLayerOptions: {},
         IHighlightLayerOptions: {},
         IImageProcessingConfigurationDefines: {},
+        IInspectable: {
+            exclude: [
+                "type", // enum type
+            ]
+        },
+        IInspectorOptions: {
+            exclude: [
+                "initialTab", // enum type
+            ]
+        },
         IMotorEnabledJoint: {},
         ImageProcessingConfiguration: {},
+        IMultiRenderTargetOptions: {},
         InstancedMesh: {},
         IntersectionInfo: {},
+        InternalTexture: {
+            exclude: [
+                "constructor", // enum
+                "source", // enum
+            ]
+        },
+        IOfflineProvider: {},
         IPhysicsEnabledObject: {
             exclude: [
                 "rotate", // not yet generatd
                 "translate", // not yet generatd
             ]
         },
+        IPhysicsEngine: {},
         IPhysicsEnginePlugin: {
             include: [] // CannonJSPlugin does not implement many methods
         },
         IPlaneLike: {},
+        IRenderingManagerAutoClearSetup: {},
+        ISceneComponent: {},
         IShadowGenerator: {
             exclude: [
                 "forceCompilation", // mix of replaceType() and type literal
@@ -164,7 +209,18 @@ export const config = <Config>{
             ]
         },
         IShadowLight: {},
+        ISimplificationSettings: {},
+        ISimplificationTask: {
+            include: [] // not yet generated
+        },
+        ISize: {},
+        ISmartArrayLike: {},
+        ISoundOptions: {},
+        ISoundTrackOptions: {},
+        ISpriteManager: {},
         IVector3Like: {},
+        KeyboardInfo: {},
+        KeyboardInfoPre: {},
         Layer: {},
         LensFlare: {},
         LensFlareSystem: {},
@@ -208,6 +264,13 @@ export const config = <Config>{
             ]
         },
         MeshBuilder: {},
+        MorphTarget: {},
+        MorphTargetManager: {},
+        MultiRenderTarget: {
+            exclude: [
+                "unbindFrameBuffer", // unsupported protected modifier
+            ]
+        },
         Node: {
             exclude: [
                 "inspectableCustomProperties", // not yet generated
@@ -223,6 +286,14 @@ export const config = <Config>{
         },
         Observable: {},
         Observer: {},
+        Octree: {},
+        OctreeBlock: {},
+        OutlineRenderer: {
+            exclude: [
+                "render", // parameter with type starting with an underscore
+            ]
+        },
+        PerfCounter: {},
         PhysicsImpostor: {
             exclude: [
                 "onCollideEvent", // nullable function type
@@ -242,15 +313,61 @@ export const config = <Config>{
         },
         PickingInfo: {},
         Plane: {},
+        PointerEventTypes: {},
+        PointerInfo: {},
+        PointerInfoBase: {},
+        PointerInfoPre: {},
         PointLight: {},
         PostProcess: {
             include: []
         },
+        PostProcessManager: {},
+        PostProcessRenderEffect: {},
+        PostProcessRenderPipeline: {},
+        PostProcessRenderPipelineManager: {},
         PushMaterial: {},
         Quaternion: {},
         Ray: {},
         ReflectionProbe: {},
+        RenderingGroupInfo: {},
+        RenderTargetCreationOptions: {},
+        RenderTargetTexture: {
+            exclude: [
+                "unbindFrameBuffer", // unhandled modifier protected
+                "setRenderingOrder", // nullable function
+                "getCustomRenderList", // not yet generated
+            ]
+        },
+        RuntimeAnimation: {},
+        Scene: {
+            exclude: [
+                "beforeRender", // nullable function
+                "afterRender", // nullable function
+                "getWorldExtends", // bug in type literal naming for a return type
+                "pick", // function type
+                "pickWithRay", // function type
+                "multiPick", // function type
+                "multiPickWithRay", // function type
+                "setRenderingOrder", // nullable function
+                "addExternalData", // function with type parameters
+                "getExternalData", // function with type parameters
+                "getOrAddExternalDataWithFactory", // function with type parameters
+                "audioListenerPositionProvider", // nullable function
+            ]
+        },
+        SceneOptions: {},
         ShadowLight: {},
+        SimplificationQueue: {},
+        SmartArray: {},
+        SmartArrayNoDuplicate: {},
+        Sound: {
+            exclude: [
+                "constructor", // nullable function
+            ]
+        },
+        SoundTrack: {},
+        SphericalHarmonics: {},
+        SphericalPolynomial: {},
         Sprite: {
             exclude: [
                 "constructor",
@@ -268,6 +385,15 @@ export const config = <Config>{
             ]
         },
         TargetCamera: {},
+        Texture: {
+            exclude: [
+                "CreateFromBase64String", // nullable function
+                "LoadFromDataString", // nullable function
+            ]
+        },
+        ThinEngine: {
+            include: [], // not yet generated
+        },
         TransformNode: {
             exclude: [
                 "normalizeToUnitCube", // nullable on function
@@ -277,6 +403,7 @@ export const config = <Config>{
                 "translate" // enum param
             ]
         },
+        UniformBuffer: {},
         Vector2: {},
         Vector3: {},
         Vector4: {},
@@ -286,6 +413,18 @@ export const config = <Config>{
             ]
         },
         VertexData: {},
-        Viewport: {}
+        Viewport: {},
+        VRCameraMetrics: {},
+        VRExperienceHelper: {
+            include: [] // not yet generated
+        },
+        VRExperienceHelperOptions: {},
+        WebVROptions: {},
+        WebXRDefaultExperience: {
+            include: [] // not yet generated
+        },
+        WebXRDefaultExperienceOptions: {
+            include: [] // not yet generated
+        },
     },
 };
