@@ -37,7 +37,6 @@ export const config = <Config>{
         AbstractMesh: {
             exclude: [
                 "collider", // not yet generated
-                "normalizeToUnitCube", // nullable function type
                 "intersects", // not yet generatedd
                 "intersectsMesh", // union type
                 "instancedBuffers", // unsupported
@@ -124,14 +123,7 @@ export const config = <Config>{
         },
         EventState: {},
         ExponentialEase: {},
-        FramingBehavior: {
-            exclude: [
-                "zoomOnMesh", // Nullable<> on function type
-                "zoomOnMeshHierarchy", // Nullable<> on function type
-                "zoomOnMeshesHierarchy", // Nullable<> on function type
-                "zoomOnBoundingInfo" // Nullable<> on function type
-            ]
-        },
+        FramingBehavior: {},
         FreeCamera: {
             exclude: [
                 "inputs", // type not yet generated
@@ -226,7 +218,7 @@ export const config = <Config>{
         LensFlareSystem: {},
         Light: {
             exclude: [
-                "GetConstructorFromName", // Nullable<> on function type
+                //        "GetConstructorFromName", // Nullable<> on function type
             ]
         },
         LinesMesh: {
@@ -240,9 +232,6 @@ export const config = <Config>{
         Material: {
             exclude: [
                 "inspectableCustomProperties", // not yet implemented
-                "onCompiled", // nullable function
-                "onError", // nullable function
-                "getRenderTargetTextures", // nullable function
                 "meshMap", // nullable function
                 "bindSceneUniformBuffer", // not yet generated
                 "forceCompilation", // not yet generated
@@ -274,12 +263,10 @@ export const config = <Config>{
         Node: {
             exclude: [
                 "inspectableCustomProperties", // not yet generated
-                "onReady", //  nullable function
                 "animationPropertiesOverride", // not yet generated
                 "AddNodeConstructor", // not yet generated
-                "Construct", // nullable function
-                "getAnimationRange", // nullable function
-                "getAnimationRanges", // net yet generated
+                "getAnimationRange", // not yet generated
+                "getAnimationRanges", // not yet generated
                 "beginAnimation", // not yet generated
                 "getHierarchyBoundingVectors", // not yet generated, nullable function
             ]
@@ -296,7 +283,6 @@ export const config = <Config>{
         PerfCounter: {},
         PhysicsImpostor: {
             exclude: [
-                "onCollideEvent", // nullable function type
                 "onCollide", // not yet generated
             ]
         },
@@ -334,25 +320,20 @@ export const config = <Config>{
         RenderTargetTexture: {
             exclude: [
                 "unbindFrameBuffer", // unhandled modifier protected
-                "setRenderingOrder", // nullable function
                 "getCustomRenderList", // not yet generated
             ]
         },
         RuntimeAnimation: {},
         Scene: {
             exclude: [
-                "beforeRender", // nullable function
-                "afterRender", // nullable function
                 "getWorldExtends", // bug in type literal naming for a return type
                 "pick", // function type
                 "pickWithRay", // function type
                 "multiPick", // function type
                 "multiPickWithRay", // function type
-                "setRenderingOrder", // nullable function
                 "addExternalData", // function with type parameters
                 "getExternalData", // function with type parameters
                 "getOrAddExternalDataWithFactory", // function with type parameters
-                "audioListenerPositionProvider", // nullable function
             ]
         },
         SceneOptions: {},
@@ -360,11 +341,7 @@ export const config = <Config>{
         SimplificationQueue: {},
         SmartArray: {},
         SmartArrayNoDuplicate: {},
-        Sound: {
-            exclude: [
-                "constructor", // nullable function
-            ]
-        },
+        Sound: {},
         SoundTrack: {},
         SphericalHarmonics: {},
         SphericalPolynomial: {},
@@ -385,18 +362,12 @@ export const config = <Config>{
             ]
         },
         TargetCamera: {},
-        Texture: {
-            exclude: [
-                "CreateFromBase64String", // nullable function
-                "LoadFromDataString", // nullable function
-            ]
-        },
+        Texture: {},
         ThinEngine: {
             include: [], // not yet generated
         },
         TransformNode: {
             exclude: [
-                "normalizeToUnitCube", // nullable on function
                 "lookAt", // enum param
                 "setPivotPoint", // enum param
                 "rotate", // enum param

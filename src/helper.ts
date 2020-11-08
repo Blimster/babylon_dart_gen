@@ -64,20 +64,30 @@ const isMatchingType = (type1: Type, type2: Type): boolean => {
             }
         }
         return true;
+    } else if (isFunctionType(type1) && isTypeType(type2)) {
+        if (type2.name.startsWith('#')) {
+            return true;
+        }
     }
     return false;
 }
 
 const typeOfPlaceholder = (type: Type, typeReplacement: Type, placeholder: string): Type => {
-    if (isTypeType(type) && isTypeType(typeReplacement)) {
-        if (typeReplacement.name === placeholder) {
-            return type;
-        }
+    if (isTypeType(typeReplacement)) {
+        if (isTypeType(type)) {
+            if (typeReplacement.name === placeholder) {
+                return type;
+            }
 
-        for (let i = 0; i < typeReplacement.typeParameters.length; i++) {
-            const r = typeOfPlaceholder(type.typeParameters[i], typeReplacement.typeParameters[i], placeholder);
-            if (r) {
-                return r;
+            for (let i = 0; i < typeReplacement.typeParameters.length; i++) {
+                const r = typeOfPlaceholder(type.typeParameters[i], typeReplacement.typeParameters[i], placeholder);
+                if (r) {
+                    return r;
+                }
+            }
+        } else if (isFunctionType(type)) {
+            if (typeReplacement.name === placeholder) {
+                return type;
             }
         }
     }
