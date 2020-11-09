@@ -1,5 +1,5 @@
 import * as ts from "typescript";
-import { Class, Constructor, Parameter, Getter, Setter, Method, Library, Type, TypeType, TypeKind, FunctionType, TypeLiteralType, Property, Interface } from "./model";
+import { Class, Constructor, Parameter, Getter, Setter, Method, Library, Type, TypeType, TypeKind, FunctionType, TypeLiteralType, Property, Interface, Enum } from "./model";
 import { config } from "./config";
 import { includeTopLevel, isTypeType } from "./helper";
 
@@ -321,6 +321,16 @@ const parseInterface = (node: ts.InterfaceDeclaration, checker: ts.TypeChecker):
     return null;
 }
 
+const parseEnum = (node: ts.EnumDeclaration, checker: ts.TypeChecker): Enum => {
+    if (includeTopLevel(node.name.getText())) {
+        return {
+            name: node.name.getText(),
+            members: node.members.map(m => m.name.getText())
+        }
+    }
+    return null;
+}
+
 const parseNode = (node: ts.Node, checker: ts.TypeChecker, library: Library): void => {
     if (ts.isClassDeclaration(node)) {
         const clazz = parseClass(node, checker);
@@ -331,6 +341,11 @@ const parseNode = (node: ts.Node, checker: ts.TypeChecker, library: Library): vo
         const interfaze = parseInterface(node, checker);
         if (interfaze) {
             library.interfaces.push(interfaze);
+        }
+    } else if (ts.isEnumDeclaration(node)) {
+        const enm = parseEnum(node, checker);
+        if (enm) {
+            library.enums.push(enm);
         }
     } else {
         ts.forEachChild(node, (n) => parseNode(n, checker, library));
@@ -350,6 +365,7 @@ export const parseLibraries = (): Library => {
     const library: Library = {
         classes: [],
         interfaces: [],
+        enums: [],
     };
     for (const sourceFile of sourceFiles) {
         if (sourceFile.fileName.indexOf(config.fileName) !== -1) {

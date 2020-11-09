@@ -1,7 +1,8 @@
-import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface, TypeKind } from "./model"
+import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface, TypeKind, Enum } from "./model"
 import { config } from "./config";
 import { firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, methodToFunctionType, parseConfigType, replaceType, treatAsTypeLiteral, typeLiteralNameFromScope, typeToString } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { NodeMaterialBlockTargets } from "babylonjs";
 
 class Writer {
     private lines: string[] = [];
@@ -311,11 +312,27 @@ const writeInterface = (library: Library, interfaze: Interface, writer: Writer):
     }
 }
 
+const writeEnum = (library: Library, enm: Enum, writer: Writer): void => {
+    writer.writeLine("part of " + config.libraryName + ";");
+    writer.writeLine();
+    writer.writeLine("/// enum " + enm.name);
+    writer.writeLine("@JS()");
+    writer.writeLine("class " + enm.name + " {");
+    for (const member of enm.members) {
+        writer.writeLine("  external static num get " + member + ";");
+    }
+    writer.writeLine("}");
+    writer.toFile();
+}
+
 export const writeLibrary = (library: Library): void => {
     for (const clazz of library.classes) {
         writeClass(library, clazz, new Writer(clazz.name.toLowerCase() + ".dart"));
     }
     for (const interfaze of library.interfaces) {
         writeInterface(library, interfaze, new Writer(interfaze.name.toLowerCase() + ".dart"));
+    }
+    for (const enm of library.enums) {
+        writeEnum(library, enm, new Writer(enm.name.toLowerCase() + ".dart"));
     }
 }

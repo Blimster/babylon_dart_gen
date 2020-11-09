@@ -159,27 +159,16 @@ export const config = <Config>{
         IGlowLayerOptions: {},
         IHighlightLayerOptions: {},
         IImageProcessingConfigurationDefines: {},
-        IInspectable: {
-            exclude: [
-                "type", // enum type
-            ]
-        },
-        IInspectorOptions: {
-            exclude: [
-                "initialTab", // enum type
-            ]
-        },
+        IInspectable: {},
+        IInspectorOptions: {},
         IMotorEnabledJoint: {},
         ImageProcessingConfiguration: {},
         IMultiRenderTargetOptions: {},
+        InspectableType: {},
         InstancedMesh: {},
+        InternalTextureSource: {},
         IntersectionInfo: {},
-        InternalTexture: {
-            exclude: [
-                "constructor", // enum
-                "source", // enum
-            ]
-        },
+        InternalTexture: {},
         IOfflineProvider: {},
         IPhysicsEnabledObject: {
             exclude: [
@@ -216,11 +205,7 @@ export const config = <Config>{
         Layer: {},
         LensFlare: {},
         LensFlareSystem: {},
-        Light: {
-            exclude: [
-                //        "GetConstructorFromName", // Nullable<> on function type
-            ]
-        },
+        Light: {},
         LinesMesh: {
             exclude: [
                 "useVertexColor", // union type
@@ -268,7 +253,7 @@ export const config = <Config>{
                 "getAnimationRange", // not yet generated
                 "getAnimationRanges", // not yet generated
                 "beginAnimation", // not yet generated
-                "getHierarchyBoundingVectors", // not yet generated, nullable function
+                "getHierarchyBoundingVectors", // not yet generated
             ]
         },
         Observable: {},
@@ -343,6 +328,7 @@ export const config = <Config>{
         SmartArrayNoDuplicate: {},
         Sound: {},
         SoundTrack: {},
+        Space: {},
         SphericalHarmonics: {},
         SphericalPolynomial: {},
         Sprite: {
@@ -366,14 +352,7 @@ export const config = <Config>{
         ThinEngine: {
             include: [], // not yet generated
         },
-        TransformNode: {
-            exclude: [
-                "lookAt", // enum param
-                "setPivotPoint", // enum param
-                "rotate", // enum param
-                "translate" // enum param
-            ]
-        },
+        TransformNode: {},
         UniformBuffer: {},
         Vector2: {},
         Vector3: {},

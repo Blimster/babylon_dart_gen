@@ -92,9 +92,15 @@ export interface Interface extends ClassOrInterface {
     superTypes: TypeType[];
 }
 
+export interface Enum {
+    name: string;
+    members: string[];
+}
+
 export interface Library {
     classes: Class[];
     interfaces: Interface[];
+    enums: Enum[];
 }
 
 export enum ScopeKind {
