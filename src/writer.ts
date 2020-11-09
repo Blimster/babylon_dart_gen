@@ -53,8 +53,12 @@ const parametersToString = (parameters: Parameter[], scope: Scope): string => {
 }
 
 const writeConstructor = (ctor: Constructor, scope: Scope, writer: Writer): void => {
-    if (includeSecondLevel(scope.name, "constructor")) {
-        writer.writeLine("  external " + firstScopeOfKind(scope, ScopeKind.clazz).name + parametersToString(ctor.parameters, scope) + ";");
+    if (includeSecondLevel(firstScopeOfKind(scope, ScopeKind.clazz).name, "constructor")) {
+        writer.writeToken("  external " + firstScopeOfKind(scope, ScopeKind.clazz).name);
+        if (ctor.name && ctor.name.length > 0) {
+            writer.writeToken("." + ctor.name);
+        }
+        writer.writeLine(parametersToString(ctor.parameters, scope) + ";");
     }
 }
 

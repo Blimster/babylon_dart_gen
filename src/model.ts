@@ -66,6 +66,7 @@ export interface Method {
 }
 
 export interface Constructor {
+    name: string;
     parameters: Parameter[];
     doc: string;
 }

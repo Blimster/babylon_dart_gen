@@ -159,8 +159,10 @@ const parseConstructors = (clazz: ts.ClassDeclaration, checker: ts.TypeChecker):
 
     clazz.forEachChild(c => {
         if (ts.isConstructorDeclaration(c)) {
+            const params = parseParameters(c.parameters, checker);
             result.push({
-                parameters: parseParameters(c.parameters, checker),
+                name: "",
+                parameters: params,
                 doc: "TODO"
             });
         }

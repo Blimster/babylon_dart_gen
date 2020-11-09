@@ -109,28 +109,7 @@ const fixParamTypesOfFixedInvalidOverrides = (parameters: Parameter[], clazz: Cl
     }
 }
 
-const addMissingConstructors = (library: Library): void => {
-    for (const clazz of library.classes) {
-        if (clazz.superType) {
-            const superClazz = classByName(clazz.superType.name, library);
-            if (superClazz.constructors.length === 1 && superClazz.constructors[0].parameters.length > 0 && clazz.constructors.length === 0) {
-                clazz.constructors = [Object.assign({}, superClazz.constructors[0])];
-            }
-        }
-    }
-    for (const interfaze of library.interfaces) {
-        for (const superType of interfaze.superTypes) {
-            const superClazz = classByName(superType.name, library);
-            if (superClazz) {
-                if (superClazz.constructors.length === 1 && superClazz.constructors[0].parameters.length > 0 && interfaze.constructors.length === 0) {
-                    interfaze.constructors = [Object.assign({}, superClazz.constructors[0])];
-                }
-            }
-        }
-    }
-};
-
-const removeConstructorsFromExtendedClasses = (library: Library): void => {
+const addRequiredNoParamConstructorsToExtendedClasses = (library: Library): void => {
     for (const superClazz of library.classes) {
         let isExtended = false;
         for (const clazz of library.classes) {
@@ -139,7 +118,25 @@ const removeConstructorsFromExtendedClasses = (library: Library): void => {
             }
         }
         if (isExtended) {
-            superClazz.constructors = [];
+            let noArgs = false;
+            let withArgs = false;
+            for (const ctor of superClazz.constructors) {
+                if (ctor.parameters && ctor.parameters.length > 0) {
+                    withArgs = true;
+                } else {
+                    noArgs = true;
+                }
+            }
+            if (withArgs && !noArgs) {
+                superClazz.constructors[0].name = "args";
+                superClazz.constructors.unshift({
+                    name: "",
+                    parameters: [],
+                    doc: "TODO"
+                });
+            }
+
+
         }
     }
 };
@@ -183,8 +180,7 @@ export const sanitizeLibrary = (library: Library): Library => {
     convertClassPropertiesToGettersAndSetters(library);
     //convertInterfacePropertiesToGettersAndSetters(library);
     addMissingGettersAndSetters(library);
-    //addMissingConstructors(library);
-    removeConstructorsFromExtendedClasses(library);
+    addRequiredNoParamConstructorsToExtendedClasses(library);
     fixInvalidOverrides(library);
     return library;
 }
