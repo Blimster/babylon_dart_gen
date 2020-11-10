@@ -111,6 +111,7 @@ export const config = <Config>{
         DetailMapConfiguration: {
             include: []
         },
+        DirectionalLight: {},
         EasingFunction: {},
         Effect: {
             include: [
