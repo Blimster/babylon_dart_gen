@@ -67,6 +67,8 @@ export const config = <Config>{
                 "focusOn", // union type
                 "setTarget", // union type
                 "inputs", // type not yet generated
+                "attachControl", // invalid override
+                "detachControl", // invalid override
             ]
         },
         AutoRotationBehavior: {},
@@ -89,6 +91,14 @@ export const config = <Config>{
                 "getActiveMeshes", // type not yet generated
                 "inputs", // type not yet generated
                 "computeWorldMatrix", // invalid override
+                {
+                    name: "attachControl",
+                    paramNames: ["ignored", "noPreventDefault"]
+                }, // method override
+                {
+                    name: "detachControl",
+                    paramNames: ["ignored"],
+                }, // method override
             ]
         },
         CannonJSPlugin: {},
@@ -128,6 +138,8 @@ export const config = <Config>{
         FreeCamera: {
             exclude: [
                 "inputs", // type not yet generated
+                "attachControl", // invalid override
+                "detachControl", // invalid override
             ]
         },
         FresnelParameters: {
@@ -149,10 +161,15 @@ export const config = <Config>{
         IActionEvent: {},
         IAnimatable: {},
         IBehaviorAware: {},
+        IClipPlanesHolder: {},
         ICollisionCoordinator: {},
+        IColor4Like: {},
+        ICreateCapsuleOptions: {},
         ICullable: {},
+        ICustomShaderNameResolveOptions: {},
         IDisposable: {},
         IEasingFunction: {},
+        IEdgesRendererOptions: {},
         IEnvironmentHelperOptions: {},
         IExplorerExtensibilityGroup: {},
         IExplorerExtensibilityOption: {},
@@ -162,8 +179,11 @@ export const config = <Config>{
         IImageProcessingConfigurationDefines: {},
         IInspectable: {},
         IInspectorOptions: {},
+        IIOptionShadowDepthMaterial: {},
         IMotorEnabledJoint: {},
         ImageProcessingConfiguration: {},
+        ImageProcessingPostProcess: {},
+        IMaterialDetailMapDefines: {},
         IMultiRenderTargetOptions: {},
         InspectableType: {},
         InstancedMesh: {},
@@ -213,6 +233,7 @@ export const config = <Config>{
                 "useVertexAlpha", // union type
                 "createInstance", // not yet generated
                 "clone", // invalid override
+                "enableEdgesRendering", // invalid override
             ]
         },
         Material: {
@@ -222,9 +243,11 @@ export const config = <Config>{
                 "bindSceneUniformBuffer", // not yet generated
                 "forceCompilation", // not yet generated
                 "forceCompilationAsync", // not yet generated
+                "onEffectCreatedObservable", // object literal
             ]
         },
         MaterialDefines: {},
+        MaterialOnEffectCreatedObservable: {},
         Matrix: {},
         MultiMaterial: {},
         Mesh: {
@@ -236,6 +259,7 @@ export const config = <Config>{
                 "MinMax", // not yet generated
                 "Center", // union type
                 "simplify", // not yet implemented
+                "cloneMeshMap", // unsupported type
             ]
         },
         MeshBuilder: {},
@@ -266,6 +290,7 @@ export const config = <Config>{
                 "render", // parameter with type starting with an underscore
             ]
         },
+        PassPostProcess: {},
         PerfCounter: {},
         PhysicsImpostor: {
             exclude: [
@@ -297,6 +322,16 @@ export const config = <Config>{
         PostProcessRenderEffect: {},
         PostProcessRenderPipeline: {},
         PostProcessRenderPipelineManager: {},
+        PrePassConfiguration: {
+            exclude: [
+                "previousWorldMatrices", // unsupported type
+                "previousBones", // unsupported type
+            ]
+        },
+        PrePassEffectConfiguration: {
+            convertFunctionPropertiesToFunctions: true,
+        },
+        PrePassRenderer: {},
         PushMaterial: {},
         Quaternion: {},
         Ray: {},
@@ -323,6 +358,7 @@ export const config = <Config>{
             ]
         },
         SceneOptions: {},
+        ShadowDepthWrapper: {},
         ShadowLight: {},
         SimplificationQueue: {},
         SmartArray: {},
@@ -334,25 +370,34 @@ export const config = <Config>{
         SphericalPolynomial: {},
         Sprite: {
             exclude: [
-                "constructor",
-                "playAnimation",
-                "manager",
-                "actionManager",
-                "Parse"
+                "Parse", // not yet generated
+                "position", // invalid override
+                "color", // invalid override
             ]
         },
         StandardMaterial: {},
         StandardMaterialDefines: {},
         SubMesh: {
             exclude: [
-                "intersects" // function type 
+                "intersects", // function type 
             ]
         },
+        SubSurfaceConfiguration: {
+            overrides: {
+                "postProcess": {
+                    getter: "external PostProcess get postProcess;",
+                    setter: "external set postProcess(PostProcess postProcess);",
+                }
+            }
+        },
+        SubSurfaceScatteringPostProcess: {},
         TargetCamera: {},
         Texture: {},
         ThinEngine: {
             include: [], // not yet generated
         },
+        ThinSprite: {},
+        ThinTexture: {},
         TransformNode: {},
         UniformBuffer: {},
         Vector2: {},

@@ -1,5 +1,5 @@
 import { config } from "./config";
-import { Class, FunctionType, Interface, Library, Method, Parameter, Property, Scope, ScopeKind, Type, TypeKind, TypeLiteralType, TypeType } from "./model";
+import { Class, FilterItem, FunctionType, Interface, Library, Method, Parameter, Property, Scope, ScopeKind, Type, TypeKind, TypeLiteralType, TypeType } from "./model";
 
 export const mapToObject = (map: Map<any, any>, switchKeyValue: boolean = false) => {
     const result = {};
@@ -152,23 +152,94 @@ export const includeTopLevel = (name: string): boolean => {
     return !!config.secondLevelConfigs[name];
 };
 
-export const includeSecondLevel = (topLevelName: string, secondLevelName: string): boolean => {
+export const filterItemFromName = (name: string): FilterItem => {
+    return {
+        name
+    }
+}
+
+export const filterItemFromMethod = (method: Method): FilterItem => {
+    return {
+        name: method.name,
+        paramNames: method.parameters.map(p => p.name)
+    }
+}
+
+export const includeSecondLevel = (topLevelName: string, filterItem: FilterItem): boolean => {
     if (!config.secondLevelConfigs[topLevelName]) {
         return false;
     }
-    const secondLevelFilter = config.secondLevelConfigs[topLevelName];
-    if (secondLevelFilter.exclude && secondLevelFilter.exclude.indexOf(secondLevelName) !== -1) {
+    const secondLevelConfig = config.secondLevelConfigs[topLevelName];
+    if (testFilter(secondLevelConfig.exclude, filterItem)) {
         return false;
     }
-    if (secondLevelFilter.include && secondLevelFilter.include.indexOf(secondLevelName) === -1) {
+    if (secondLevelConfig.include && !testFilter(secondLevelConfig.include, filterItem)) {
         return false;
     }
     return true;
 }
 
+const testFilter = (filterList: (string | FilterItem)[], filterItem: FilterItem): boolean => {
+    const fl: FilterItem[] = filterList ? filterList.map((e) => {
+        if (typeof e === "string") {
+            return <FilterItem>{
+                name: e
+            }
+        }
+        return e;
+    }) : null;
+
+    if (!fl) {
+        return false;
+    }
+
+    for (const f of fl) {
+        if (filterItem.name === f.name) {
+            if (filterItem.paramNames) {
+                if (f.paramNames) {
+                    if (filterItem.paramNames.length === f.paramNames.length) {
+                        let matchingParams = true;
+                        for (let i = 0; i < filterItem.paramNames.length; i++) {
+                            if (filterItem.paramNames[i] !== f.paramNames[i]) {
+                                matchingParams = false;
+                            }
+                        }
+                        if (matchingParams) {
+                            return true;
+                        }
+                    }
+                } else {
+                    return true;
+                }
+            } else {
+                if (!f.paramNames) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+export const override = (firstLevelName: string, secondLevelName: string, type: "getter" | "setter"): string => {
+    const secondLevelConfig = config.secondLevelConfigs[firstLevelName];
+    if (secondLevelConfig && secondLevelConfig.overrides) {
+        const overrides = secondLevelConfig.overrides[secondLevelName];
+        if (overrides) {
+            return overrides[type];
+        }
+    }
+    return null;
+}
+
 export const treatAsTypeLiteral = (name: string): boolean => {
     const secondLevelConfig = config.secondLevelConfigs[name];
     return secondLevelConfig && secondLevelConfig.treatAsTypeLiteral;
+}
+
+export const convertFunctionPropertiesToFunctions = (name: string): boolean => {
+    const secondLevelConfig = config.secondLevelConfigs[name];
+    return secondLevelConfig && secondLevelConfig.convertFunctionPropertiesToFunctions;
 }
 
 export const methodToFunctionType = (method: Method): FunctionType => {

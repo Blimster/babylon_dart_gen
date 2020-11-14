@@ -1,4 +1,4 @@
-import { classByName, implementedInterfaces, interfaceByName, isTypeType, mapToObject, missingGettersAndSetters, replaceType } from "./helper";
+import { classByName, convertFunctionPropertiesToFunctions, implementedInterfaces, interfaceByName, isFunctionType, isTypeType, mapToObject, missingGettersAndSetters, replaceType } from "./helper";
 import { Class, Library, Parameter, TypeType } from "./model";
 
 const convertClassPropertiesToGettersAndSetters = (library: Library): void => {
@@ -25,6 +25,26 @@ const convertClassPropertiesToGettersAndSetters = (library: Library): void => {
             }
         }
         clazz.properties = [];
+    }
+}
+
+const convertInterfaceFunctionPropertiesToFunctions = (library: Library): void => {
+    for (const interfaze of library.interfaces) {
+        if (convertFunctionPropertiesToFunctions(interfaze.name)) {
+            interfaze.properties = interfaze.properties.filter(property => {
+                if (isFunctionType(property.type)) {
+                    interfaze.methods.push({
+                        name: property.name,
+                        doc: property.doc,
+                        modifiers: property.isStatic ? ['static'] : [],
+                        parameters: property.type.parameters,
+                        returnType: property.type.returnType
+                    });
+                    return false;
+                }
+                return true;
+            });
+        }
     }
 }
 
@@ -176,11 +196,31 @@ const fixInvalidOverrides = (library: Library): void => {
     }
 }
 
+const removeDuplicateMethods = (library: Library) => {
+    for (const clazz of library.classes) {
+        clazz.methods = clazz.methods.filter((m1, i1) => {
+            for (let i2 = i1; i2 < clazz.methods.length; i2++) {
+                if (i1 !== i2) {
+                    const m2 = clazz.methods[i2];
+                    if (m1.name === m2.name) {
+                        if (m1.parameters.map(p => p.name).join(";") === m2.parameters.map(p => p.name).join(";")) {
+                            return false;
+                        }
+                    }
+                }
+            };
+            return true;
+        });
+    }
+}
+
 export const sanitizeLibrary = (library: Library): Library => {
     convertClassPropertiesToGettersAndSetters(library);
+    convertInterfaceFunctionPropertiesToFunctions(library);
     //convertInterfacePropertiesToGettersAndSetters(library);
     addMissingGettersAndSetters(library);
     addRequiredNoParamConstructorsToExtendedClasses(library);
     fixInvalidOverrides(library);
+    removeDuplicateMethods(library);
     return library;
 }

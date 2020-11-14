@@ -1,8 +1,7 @@
 import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface, TypeKind, Enum } from "./model"
 import { config } from "./config";
-import { firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, methodToFunctionType, parseConfigType, replaceType, treatAsTypeLiteral, typeLiteralNameFromScope, typeToString } from "./helper";
+import { filterItemFromMethod, filterItemFromName, firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, methodToFunctionType, override, parseConfigType, replaceType, treatAsTypeLiteral, typeLiteralNameFromScope, typeToString } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { NodeMaterialBlockTargets } from "babylonjs";
 
 class Writer {
     private lines: string[] = [];
@@ -54,7 +53,7 @@ const parametersToString = (parameters: Parameter[], scope: Scope): string => {
 }
 
 const writeConstructor = (ctor: Constructor, scope: Scope, writer: Writer): void => {
-    if (includeSecondLevel(firstScopeOfKind(scope, ScopeKind.clazz).name, "constructor")) {
+    if (includeSecondLevel(firstScopeOfKind(scope, ScopeKind.clazz).name, filterItemFromName("constructor"))) {
         writer.writeToken("  external " + firstScopeOfKind(scope, ScopeKind.clazz).name);
         if (ctor.name && ctor.name.length > 0) {
             writer.writeToken("." + ctor.name);
@@ -63,14 +62,14 @@ const writeConstructor = (ctor: Constructor, scope: Scope, writer: Writer): void
     }
 }
 
-const writeMethod = (method: Method, scope: Scope, writer: Writer): void => {
-    if (includeSecondLevel(firstScopeOfKind(scope, ScopeKind.clazz).name, method.name)) {
+const writeMethod = (method: Method, external: boolean, scope: Scope, writer: Writer): void => {
+    if (includeSecondLevel(firstScopeOfKind(scope, ScopeKind.clazz).name, filterItemFromMethod(method))) {
         const methodScope = <Scope>{
             kind: ScopeKind.function,
             name: method.name,
             parent: scope
         };
-        writer.writeLine("  external " + (method.modifiers.length > 0 ? method.modifiers.join(" ") + " " : "") + typeToString(method.returnType, methodScope) + " " + method.name + parametersToString(method.parameters, methodScope) + ";");
+        writer.writeLine("  " + (external ? "external " : "") + (method.modifiers.length > 0 ? method.modifiers.join(" ") + " " : "") + typeToString(method.returnType, methodScope) + " " + method.name + parametersToString(method.parameters, methodScope) + ";");
     }
 }
 
@@ -80,7 +79,12 @@ const writeGetter = (getter: Getter, scope: Scope, writer: Writer): void => {
         name: getter.name,
         parent: scope
     };
-    writer.writeLine("  external " + (getter.isStatic ? "static " : "") + typeToString(getter.returnType, getterScope) + " get " + getter.name + ";");
+    const over = override(scope.name, getter.name, "getter");
+    if (over) {
+        writer.writeLine("  " + over);
+    } else {
+        writer.writeLine("  external " + (getter.isStatic ? "static " : "") + typeToString(getter.returnType, getterScope) + " get " + getter.name + ";");
+    }
 }
 
 const writeSetter = (setter: Setter, scope: Scope, writer: Writer): void => {
@@ -89,17 +93,22 @@ const writeSetter = (setter: Setter, scope: Scope, writer: Writer): void => {
         name: setter.name,
         parent: scope
     };
-    writer.writeLine("  external " + (setter.isStatic ? "static " : "") + "set " + setter.name + "(" + parameterToString(setter.parameter, setterScope) + ");");
+    const over = override(scope.name, setter.name, "setter");
+    if (over) {
+        writer.writeLine("  " + over);
+    } else {
+        writer.writeLine("  external " + (setter.isStatic ? "static " : "") + "set " + setter.name + "(" + parameterToString(setter.parameter, setterScope) + ");");
+    }
 }
 
 const writeGettersAndSetters = (library: Library, clazzOrInterfaze: ClassOrInterface, scope: Scope, writer: Writer): void => {
     for (const getter of clazzOrInterfaze.getters) {
-        if (includeSecondLevel(scope.name, getter.name)) {
+        if (includeSecondLevel(scope.name, filterItemFromName(getter.name))) {
             writeGetter(getter, scope, writer);
         }
     }
     for (const setter of clazzOrInterfaze.setters) {
-        if (includeSecondLevel(scope.name, setter.name)) {
+        if (includeSecondLevel(scope.name, filterItemFromName(setter.name))) {
             writeSetter(setter, scope, writer);
         }
     }
@@ -111,7 +120,7 @@ const writeProperty = (property: Property, scope: Scope, writer: Writer): void =
 
 const writeProperties = (properties: Property[], scope: Scope, writer: Writer): void => {
     for (const property of properties) {
-        if (includeSecondLevel(scope.name, property.name)) {
+        if (includeSecondLevel(scope.name, filterItemFromName(property.name))) {
             const getterScope = <Scope>{
                 kind: ScopeKind.getter,
                 name: property.name,
@@ -229,14 +238,14 @@ const writeClass = (library: Library, clazz: Class, writer: Writer): void => {
     writeProperties(clazz.properties, scope, writer);
     writeGettersAndSetters(library, clazz, scope, writer);
     for (const method of clazz.methods) {
-        writeMethod(method, scope, writer);
+        writeMethod(method, true, scope, writer);
     }
     // interface merging
     const extraPropertiesAndMethods: string[] = [];
     for (const interfaze of library.interfaces) {
         if (interfaze.isExported === false && interfaze.name === clazz.name) {
             for (const property of interfaze.properties) {
-                if (includeSecondLevel(scope.name, property.name)) {
+                if (includeSecondLevel(scope.name, filterItemFromName(property.name))) {
                     if (extraPropertiesAndMethods.indexOf(property.name) === -1) {
                         extraPropertiesAndMethods.push(property.name);
                         const getterScope = <Scope>{
@@ -251,7 +260,7 @@ const writeClass = (library: Library, clazz: Class, writer: Writer): void => {
             for (const method of interfaze.methods) {
                 if (extraPropertiesAndMethods.indexOf(method.name) === -1) {
                     extraPropertiesAndMethods.push(method.name);
-                    writeMethod(method, scope, writer);
+                    writeMethod(method, true, scope, writer);
                 }
             }
         }
@@ -304,7 +313,7 @@ const writeInterface = (library: Library, interfaze: Interface, writer: Writer):
             writeProperties(interfaze.properties, scope, writer);
             writeGettersAndSetters(library, interfaze, scope, writer);
             for (const method of interfaze.methods) {
-                writeMethod(method, scope, writer);
+                writeMethod(method, false, scope, writer);
             }
             writer.writeLine("}");
         }

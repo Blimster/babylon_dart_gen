@@ -119,10 +119,22 @@ export interface Scope {
     name: string;
 }
 
+export interface FilterItem {
+    name?: string;
+    paramNames?: string[];
+}
+
+export interface Overrides {
+    getter?: string;
+    setter?: string;
+}
+
 export interface SecondLevelConfig {
     treatAsTypeLiteral?: boolean;
-    include?: string[];
-    exclude?: string[];
+    convertFunctionPropertiesToFunctions?: boolean;
+    overrides?: { [key: string]: Overrides };
+    include?: (string | FilterItem)[];
+    exclude?: (string | FilterItem)[];
 }
 
 export interface Config {

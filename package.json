@@ -9,7 +9,8 @@
     "author": "Oliver Damm <oliver.damm@gmx.de>",
     "license": "MIT",
     "dependencies": {
-        "babylonjs": "4.1.0",
+        "babylonjs": "4.2.0",
+        "babylonjs-loaders": "4.2.0",
         "typescript": "^3.6.5"
     },
     "devDependencies": {
