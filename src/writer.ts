@@ -154,6 +154,19 @@ const typeLiteralsForClassOrInterface = (clazz: ClassOrInterface): { [key: strin
         name: clazz.name
     };
 
+    clazz.constructors.forEach(c => {
+        c.parameters.forEach(p => {
+            if (isTypeLiteralType(p.type)) {
+                const paramScope = <Scope>{
+                    kind: ScopeKind.parameter,
+                    name: p.name,
+                    parent: classScope
+                };
+                typeLiteralsForTypeLiteral(p.type, paramScope, result);
+            }
+        });
+    });
+
     clazz.methods.forEach(m => {
         const methodScope = <Scope>{
             kind: ScopeKind.function,
@@ -286,6 +299,7 @@ const writeInterface = (library: Library, interfaze: Interface, writer: Writer):
                 properties: interfaze.properties,
                 callSignatures: interfaze.methods.map(m => methodToFunctionType(m))
             }
+            writer.writeLine("/// interface " + interfaze.name);
             writeTypeLiteral(interfaze.name, typeLiteral, scope, writer);
         } else {
             const typeLiterals = typeLiteralsForClassOrInterface(interfaze);

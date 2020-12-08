@@ -118,6 +118,7 @@ export const config = <Config>{
         DebugLayer: {},
         DebugLayerTab: {},
         DepthRenderer: {},
+        DepthSortedParticle: {},
         DetailMapConfiguration: {
             include: []
         },
@@ -178,7 +179,9 @@ export const config = <Config>{
         IHighlightLayerOptions: {},
         IImageProcessingConfigurationDefines: {},
         IInspectable: {},
-        IInspectorOptions: {},
+        IInspectorOptions: {
+            treatAsTypeLiteral: true,
+        },
         IIOptionShadowDepthMaterial: {},
         IMotorEnabledJoint: {},
         ImageProcessingConfiguration: {},
@@ -263,6 +266,7 @@ export const config = <Config>{
             ]
         },
         MeshBuilder: {},
+        ModelShape: {},
         MorphTarget: {},
         MorphTargetManager: {},
         MultiRenderTarget: {
@@ -345,6 +349,7 @@ export const config = <Config>{
             ]
         },
         RuntimeAnimation: {},
+        Scalar: {},
         Scene: {
             exclude: [
                 "getWorldExtends", // bug in type literal naming for a return type
@@ -363,6 +368,15 @@ export const config = <Config>{
         SimplificationQueue: {},
         SmartArray: {},
         SmartArrayNoDuplicate: {},
+        SolidParticle: {},
+        SolidParticleSystem: {
+            exclude: [
+                "pickedParticles", // array of type literals
+                "pickedBySubMesh", // array of type literals
+                "pickedParticle", // nullable type literal
+            ]
+        },
+        SolidParticleVertex: {},
         Sound: {},
         SoundTrack: {},
         Space: {},

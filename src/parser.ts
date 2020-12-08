@@ -1,7 +1,7 @@
 import * as ts from "typescript";
 import { Class, Constructor, Parameter, Getter, Setter, Method, Library, Type, TypeType, TypeKind, FunctionType, TypeLiteralType, Property, Interface, Enum } from "./model";
 import { config } from "./config";
-import { includeTopLevel, isTypeType } from "./helper";
+import { includeTopLevel, isTypeLiteralType, isTypeType } from "./helper";
 
 const isExported = (node: ts.Node): boolean => {
     return (
@@ -75,11 +75,19 @@ const parseType = (typeNode: ts.Node, checker: ts.TypeChecker): Type => {
     if (ts.isArrayTypeNode(typeNode)) {
         const elementType = parseType(typeNode.elementType, checker);
         if (isTypeType(elementType)) {
-            const elementType = (parseType(typeNode.elementType, checker) as TypeType);
             return <TypeType>{
                 kind: TypeKind.type,
                 name: elementType.name,
                 typeParameters: elementType.typeParameters,
+                isArray: true
+            }
+        } else if (isTypeLiteralType(elementType)) {
+            // FIXME the resulting code will not work, but the transpiler no longer 
+            // crashes here and it is possible add excludes to the config.ts
+            return <TypeType>{
+                kind: TypeKind.type,
+                name: 'UNSUPPORTED',
+                typeParameters: [],
                 isArray: true
             }
         }
@@ -128,6 +136,14 @@ const parseType = (typeNode: ts.Node, checker: ts.TypeChecker): Type => {
         return <TypeType>{
             kind: TypeKind.type,
             name: "dynamic",
+            typeParameters: [],
+            isArray: false
+        };
+    } else if (ts.isTupleTypeNode(typeNode) && typeNode.getText() === "[]") {
+        // a "[]" seems to be a tuple type
+        return <TypeType>{
+            kind: TypeKind.type,
+            name: "List",
             typeParameters: [],
             isArray: false
         };
