@@ -1,7 +1,10 @@
 import { Config } from "./model";
 
 export const config = <Config>{
-    fileName: "node_modules/babylonjs/babylon.module.d.ts",
+    fileNames: [
+        "node_modules/babylonjs/babylon.module.d.ts",
+        "node_modules/babylonjs-serializers/babylonjs.serializers.module.d.ts"
+    ],
     libraryName: "babylon",
     outFolder: "../babylon_dart/lib/src",
     typeReplacements: {
@@ -114,6 +117,7 @@ export const config = <Config>{
             ]
         },
         ColorCurves: {},
+        CSG: {},
         DataBuffer: {},
         DebugLayer: {},
         DebugLayerTab: {},
@@ -155,6 +159,12 @@ export const config = <Config>{
         },
         GeometryBufferRenderer: {},
         GlowLayer: {},
+        GLTFData: {
+            exclude: [
+                "glTFFiles", // 
+            ]
+        },
+        GLTF2Export: {},
         GroundMesh: {},
         HemisphericLight: {},
         HighlightLayer: {},
@@ -174,6 +184,7 @@ export const config = <Config>{
         IEnvironmentHelperOptions: {},
         IExplorerExtensibilityGroup: {},
         IExplorerExtensibilityOption: {},
+        IExportOptions: {},
         IGetSetVerticesData: {},
         IGlowLayerOptions: {},
         IHighlightLayerOptions: {},

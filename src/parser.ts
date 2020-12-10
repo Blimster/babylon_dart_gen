@@ -371,7 +371,7 @@ const parseNode = (node: ts.Node, checker: ts.TypeChecker, library: Library): vo
 
 export const parseLibraries = (): Library => {
     const program = ts.createProgram({
-        rootNames: [config.fileName],
+        rootNames: config.fileNames,
         options: {
         },
     });
@@ -384,7 +384,7 @@ export const parseLibraries = (): Library => {
         enums: [],
     };
     for (const sourceFile of sourceFiles) {
-        if (sourceFile.fileName.indexOf(config.fileName) !== -1) {
+        if (config.fileNames.filter(f => sourceFile.fileName.indexOf(f) !== -1).length > 0) {
             parseNode(sourceFile, checker, library);
         }
     }

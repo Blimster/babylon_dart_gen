@@ -138,7 +138,7 @@ export interface SecondLevelConfig {
 }
 
 export interface Config {
-    fileName: string;
+    fileNames: string[];
     libraryName: string;
     outFolder: string;
     typeReplacements: { [key: string]: string };
