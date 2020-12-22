@@ -159,11 +159,7 @@ export const config = <Config>{
         },
         GeometryBufferRenderer: {},
         GlowLayer: {},
-        GLTFData: {
-            exclude: [
-                "glTFFiles", // 
-            ]
-        },
+        GLTFData: {},
         GLTF2Export: {},
         GroundMesh: {},
         HemisphericLight: {},

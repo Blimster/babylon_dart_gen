@@ -139,7 +139,9 @@ export const typeToString = (type: Type, scope: Scope): string => {
     } else if (isFunctionType(type)) {
         return typeToString(type.returnType, scope) + " Function(" + (type.parameters.map(p => typeToString(p.type, scope) + " " + p.name)).join(", ") + ")";
     } else if (isTypeLiteralType(type)) {
-        if (type.properties.length > 0 && type.callSignatures.length === 0) {
+        if (type.indexSignature) {
+            return "dynamic";
+        } else if (type.properties.length > 0 && type.callSignatures.length === 0) {
             return typeLiteralNameFromScope(scope);
         } else if (type.properties.length === 0 && type.callSignatures.length === 1) {
             return typeToString(type.callSignatures[0], scope);

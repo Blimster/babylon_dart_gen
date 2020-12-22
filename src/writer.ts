@@ -167,6 +167,39 @@ const typeLiteralsForClassOrInterface = (clazz: ClassOrInterface): { [key: strin
         });
     });
 
+    clazz.properties.forEach(p => {
+        if (isTypeLiteralType(p.type)) {
+            const propertyScope = <Scope>{
+                kind: ScopeKind.property,
+                name: p.name,
+                parent: classScope
+            };
+            result[typeLiteralNameFromScope(propertyScope)] = p.type;
+        }
+    });
+
+    clazz.getters.forEach(g => {
+        if (isTypeLiteralType(g.returnType)) {
+            const getterScope = <Scope>{
+                kind: ScopeKind.getter,
+                name: g.name,
+                parent: classScope
+            };
+            result[typeLiteralNameFromScope(getterScope)] = g.returnType;
+        }
+    });
+
+    clazz.setters.forEach(s => {
+        if (isTypeLiteralType(s.parameter.type)) {
+            const setterScope = <Scope>{
+                kind: ScopeKind.setter,
+                name: s.name,
+                parent: classScope
+            };
+            result[typeLiteralNameFromScope(setterScope)] = s.parameter.type;
+        }
+    });
+
     clazz.methods.forEach(m => {
         const methodScope = <Scope>{
             kind: ScopeKind.function,
@@ -191,8 +224,11 @@ const typeLiteralsForClassOrInterface = (clazz: ClassOrInterface): { [key: strin
     return result;
 }
 
-const writeTypeLiteral = (name: string, typeLiteral: TypeLiteralType, scope: Scope, writer: Writer): void => {
+const writeTypeLiteral = (preLine: string, name: string, typeLiteral: TypeLiteralType, scope: Scope, writer: Writer): void => {
     if (typeLiteral.properties.length > 0 && typeLiteral.callSignatures.length === 0) {
+        if (preLine != null) {
+            writer.writeLine(preLine);
+        }
         writer.writeLine("@JS()");
         writer.writeLine("@anonymous");
         writer.writeLine("class " + name + " {");
@@ -219,8 +255,7 @@ const writeClass = (library: Library, clazz: Class, writer: Writer): void => {
 
     const typeLiterals = typeLiteralsForClassOrInterface(clazz);
     Object.keys(typeLiterals).forEach(name => {
-        writer.writeLine();
-        writeTypeLiteral(name, typeLiterals[name], {
+        writeTypeLiteral("", name, typeLiterals[name], {
             kind: ScopeKind.typeLiteral,
             name: name
         }, writer);
@@ -297,15 +332,14 @@ const writeInterface = (library: Library, interfaze: Interface, writer: Writer):
             const typeLiteral: TypeLiteralType = {
                 kind: TypeKind.function,
                 properties: interfaze.properties,
-                callSignatures: interfaze.methods.map(m => methodToFunctionType(m))
+                callSignatures: interfaze.methods.map(m => methodToFunctionType(m)),
+                indexSignature: false
             }
-            writer.writeLine("/// interface " + interfaze.name);
-            writeTypeLiteral(interfaze.name, typeLiteral, scope, writer);
+            writeTypeLiteral("/// interface " + interfaze.name, interfaze.name, typeLiteral, scope, writer);
         } else {
             const typeLiterals = typeLiteralsForClassOrInterface(interfaze);
             Object.keys(typeLiterals).forEach(name => {
-                writer.writeLine();
-                writeTypeLiteral(name, typeLiterals[name], {
+                writeTypeLiteral("", name, typeLiterals[name], {
                     kind: ScopeKind.typeLiteral,
                     name: name
                 }, writer);

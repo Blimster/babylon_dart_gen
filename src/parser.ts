@@ -84,11 +84,11 @@ const parseType = (typeNode: ts.Node, checker: ts.TypeChecker): Type => {
         } else if (isTypeLiteralType(elementType)) {
             // FIXME the resulting code will not work, but the transpiler no longer 
             // crashes here and it is possible add excludes to the config.ts
-            return <TypeType>{
-                kind: TypeKind.type,
-                name: 'UNSUPPORTED',
-                typeParameters: [],
-                isArray: true
+            return <TypeLiteralType>{
+                kind: TypeKind.typeLiteral,
+                properties: [],
+                callSignatures: [],
+                indexSignature: false
             }
         }
     } else if (ts.isTypeReferenceNode(typeNode)) {
@@ -101,17 +101,24 @@ const parseType = (typeNode: ts.Node, checker: ts.TypeChecker): Type => {
     } else if (ts.isTypeLiteralNode(typeNode)) {
         const properties: Property[] = [];
         const callSignatures: FunctionType[] = [];
+        var indexSignature: boolean = false;
         typeNode.members.forEach(m => {
             if (ts.isPropertySignature(m)) {
                 properties.push(parseProperty(m, checker));
             } else if (ts.isCallSignatureDeclaration(m)) {
                 callSignatures.push(parseType(m, checker) as FunctionType);
+            } else if (ts.isIndexSignatureDeclaration(m)) {
+                indexSignature = true;
+                // console.log("index signature found: " + m.getFullText());
+                // console.log("index signature found: " + m.parameters[0].type.getText());
+                // console.log("index signature found: " + m.parameters[0].name.getText());
             }
         });
         return <TypeLiteralType>{
             kind: TypeKind.typeLiteral,
             properties,
-            callSignatures
+            callSignatures,
+            indexSignature
         };
     } else if (ts.isFunctionTypeNode(typeNode)) {
         return <FunctionType>{

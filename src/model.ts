@@ -31,6 +31,7 @@ export interface Property {
 export interface TypeLiteralType extends Type {
     properties: Property[];
     callSignatures: FunctionType[];
+    indexSignature: boolean;
 }
 
 export interface Parameter {
