@@ -118,6 +118,7 @@ export const config = <Config>{
         },
         ColorCurves: {},
         CSG: {},
+        CubeTexture: {},
         DataBuffer: {},
         DebugLayer: {},
         DebugLayerTab: {},
@@ -133,6 +134,7 @@ export const config = <Config>{
                 "dispose"
             ]
         },
+        EffectFallbacks: {},
         EffectLayer: {},
         EnvironmentHelper: {
             include: [] // not yet generated
@@ -177,6 +179,7 @@ export const config = <Config>{
         IDisposable: {},
         IEasingFunction: {},
         IEdgesRendererOptions: {},
+        IEffectFallbacks: {},
         IEnvironmentHelperOptions: {},
         IExplorerExtensibilityGroup: {},
         IExplorerExtensibilityOption: {},
@@ -190,6 +193,12 @@ export const config = <Config>{
             treatAsTypeLiteral: true,
         },
         IIOptionShadowDepthMaterial: {},
+        IMaterialAnisotropicDefines: {},
+        IMaterialBRDFDefines: {},
+        IMaterialClearCoatDefines: {},
+        IMaterialCompilationOptions: {},
+        IMaterialSheenDefines: {},
+        IMaterialSubSurfaceDefines: {},
         IMotorEnabledJoint: {},
         ImageProcessingConfiguration: {},
         ImageProcessingPostProcess: {},
@@ -302,6 +311,17 @@ export const config = <Config>{
             ]
         },
         PassPostProcess: {},
+        PBRAnisotropicConfiguration: {},
+        PBRBaseMaterial: {},
+        PBRBaseSimpleMaterial: {},
+        PBRBRDFConfiguration: {},
+        PBRClearCoatConfiguration: {},
+        PBRCustomMaterial: {},
+        PBRMaterial: {},
+        PBRMetallicRoughnessMaterial: {},
+        PBRSheenConfiguration: {},
+        PBRSpecularGlossinessMaterial: {},
+        PBRSubSurfaceConfiguration: {},
         PerfCounter: {},
         PhysicsImpostor: {
             exclude: [
