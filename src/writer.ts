@@ -115,7 +115,7 @@ const writeGettersAndSetters = (library: Library, clazzOrInterfaze: ClassOrInter
 }
 
 const writeProperty = (property: Property, scope: Scope, writer: Writer): void => {
-    writer.writeLine("  " + typeToString(property.type, scope) + " " + property.name + ";");
+    writer.writeLine("  external " + typeToString(property.type, scope) + " " + property.name + ";");
 }
 
 const writeProperties = (properties: Property[], scope: Scope, writer: Writer): void => {
