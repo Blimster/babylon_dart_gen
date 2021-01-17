@@ -131,7 +131,8 @@ export interface Overrides {
 }
 
 export interface SecondLevelConfig {
-    treatAsTypeLiteral?: boolean;
+    forceExport?: boolean;
+    treatAsObjectLiteral?: boolean;
     convertFunctionPropertiesToFunctions?: boolean;
     overrides?: { [key: string]: Overrides };
     include?: (string | FilterItem)[];

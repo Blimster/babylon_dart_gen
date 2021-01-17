@@ -1,7 +1,7 @@
 import * as ts from "typescript";
 import { Class, Constructor, Parameter, Getter, Setter, Method, Library, Type, TypeType, TypeKind, FunctionType, TypeLiteralType, Property, Interface, Enum } from "./model";
 import { config } from "./config";
-import { includeTopLevel, isTypeLiteralType, isTypeType } from "./helper";
+import { forceExport, includeTopLevel, isTypeLiteralType, isTypeType } from "./helper";
 
 const isExported = (node: ts.Node): boolean => {
     return (
@@ -256,7 +256,7 @@ const parseMethods = (node: ts.Node, checker: ts.TypeChecker, debug?: boolean): 
 const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class => {
     const symbol = checker.getSymbolAtLocation(node.name);
 
-    if (includeTopLevel(symbol.getName()) && isExported(node)) {
+    if (includeTopLevel(symbol.getName()) && isExported(node) || forceExport(symbol.getName())) {
         if (!isHidden(symbol.getName())) {
             let isAbstract = false;
             if (node.modifiers) {
@@ -330,7 +330,7 @@ const parseInterface = (node: ts.InterfaceDeclaration, checker: ts.TypeChecker):
             const interfaze = {
                 name: node.name.getText(),
                 typeParams,
-                isExported: isExported(node),
+                isExported: isExported(node) || forceExport(node.name.getText()),
                 superTypes,
                 constructors: [],
                 properties: parseProperties(node, checker),
