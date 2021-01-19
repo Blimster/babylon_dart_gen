@@ -40,6 +40,7 @@ export const config = <Config>{
         "HTMLElement": "HtmlElement",
         "HTMLImageElement": "ImageElement",
         "HTMLButtonElement": "ButtonElement",
+        "HTMLVideoElement": "VideoElement",
         "PointerEventInit": "dynamic", // interface for type literal defined by typescript dom lib
     },
     secondLevelConfigs: {
@@ -137,6 +138,7 @@ export const config = <Config>{
         DepthCullingState: {},
         DepthRenderer: {},
         DepthSortedParticle: {},
+        DepthTextureCreationOptions: {},
         DetailMapConfiguration: {
             include: []
         },
@@ -341,7 +343,13 @@ export const config = <Config>{
                 "getHierarchyBoundingVectors", // not yet generated
             ]
         },
-        NullEngine: {},
+        NullEngine: {
+            exclude: [
+                "updateDynamicTexture", // invalid override
+                "updateDynamicIndexBuffer", // invalid override
+                "updateDynamicVertexBuffer", // invalid override
+            ]
+        },
         NullEngineOptions: {
             treatAsObjectLiteral: true
         },
@@ -488,6 +496,7 @@ export const config = <Config>{
                 "bindIndexBuffer", // protected modifier
                 "getGlInfo", // object literal as result of a function
                 "framebufferDimensionsObject", // object literal as type param
+                "createRawCubeTextureFromUrl", // method with param as parameter
             ],
         },
         ThinSprite: {},

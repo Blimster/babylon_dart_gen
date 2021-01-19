@@ -236,17 +236,17 @@ export const override = (firstLevelName: string, secondLevelName: string, type: 
 
 export const treatAsObjectLiteral = (name: string): boolean => {
     const secondLevelConfig = config.secondLevelConfigs[name];
-    return secondLevelConfig && secondLevelConfig.treatAsObjectLiteral;
+    return (secondLevelConfig && secondLevelConfig.treatAsObjectLiteral) === true;
 }
 
 export const forceExport = (name: string): boolean => {
     const secondLevelConfig = config.secondLevelConfigs[name];
-    return secondLevelConfig && secondLevelConfig.forceExport;
+    return (secondLevelConfig && secondLevelConfig.forceExport) === true;
 }
 
 export const convertFunctionPropertiesToFunctions = (name: string): boolean => {
     const secondLevelConfig = config.secondLevelConfigs[name];
-    return secondLevelConfig && secondLevelConfig.convertFunctionPropertiesToFunctions;
+    return (secondLevelConfig && secondLevelConfig.convertFunctionPropertiesToFunctions) === true;
 }
 
 export const methodToFunctionType = (method: Method): FunctionType => {

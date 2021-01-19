@@ -1,6 +1,6 @@
-import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface, TypeKind, Enum } from "./model"
+import { Library, Class, Constructor, Method, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface, TypeKind, Enum } from "./model"
 import { config } from "./config";
-import { filterItemFromMethod, filterItemFromName, firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, methodToFunctionType, override, parseConfigType, replaceType, treatAsObjectLiteral, typeLiteralNameFromScope, typeToString } from "./helper";
+import { filterItemFromMethod, filterItemFromName, firstScopeOfKind, includeSecondLevel, isFirstOptionalParam, isLastOptionalParam, isTypeLiteralType, methodToFunctionType, override, treatAsObjectLiteral, typeLiteralNameFromScope, typeToString } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 class Writer {

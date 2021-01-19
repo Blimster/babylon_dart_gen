@@ -256,7 +256,7 @@ const parseMethods = (node: ts.Node, checker: ts.TypeChecker, debug?: boolean): 
 const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class => {
     const symbol = checker.getSymbolAtLocation(node.name);
 
-    if (includeTopLevel(symbol.getName()) && isExported(node) || forceExport(symbol.getName())) {
+    if (includeTopLevel(symbol.getName()) && (isExported(node) || forceExport(symbol.getName()))) {
         if (!isHidden(symbol.getName())) {
             let isAbstract = false;
             if (node.modifiers) {
