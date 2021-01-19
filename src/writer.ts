@@ -1,6 +1,6 @@
-import { Library, Class, Constructor, Method, Type, TypeType, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface, TypeKind, Enum } from "./model"
+import { Library, Class, Constructor, Method, TypeLiteralType, Parameter, Scope, ScopeKind, Getter, Setter, Property, Interface, ClassOrInterface, TypeKind, Enum } from "./model"
 import { config } from "./config";
-import { filterItemFromMethod, filterItemFromName, firstScopeOfKind, includeSecondLevel as includeSecondLevel, isFirstOptionalParam, isFunctionType, isLastOptionalParam, isTypeLiteralType, isTypeType, methodToFunctionType, override, parseConfigType, replaceType, treatAsTypeLiteral, typeLiteralNameFromScope, typeToString } from "./helper";
+import { filterItemFromMethod, filterItemFromName, firstScopeOfKind, includeSecondLevel, isFirstOptionalParam, isLastOptionalParam, isTypeLiteralType, methodToFunctionType, override, treatAsObjectLiteral, typeLiteralNameFromScope, typeToString } from "./helper";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 class Writer {
@@ -328,7 +328,7 @@ const writeInterface = (library: Library, interfaze: Interface, writer: Writer):
         writer.writeLine("part of " + config.libraryName + ";");
         writer.writeLine();
 
-        if (treatAsTypeLiteral(interfaze.name)) {
+        if (treatAsObjectLiteral(interfaze.name)) {
             const typeLiteral: TypeLiteralType = {
                 kind: TypeKind.function,
                 properties: interfaze.properties,

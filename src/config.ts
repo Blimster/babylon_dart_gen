@@ -17,6 +17,7 @@ export const config = <Config>{
         "Float32Array": "Float32List",
         "FloatArray": "Float32List",
         "Uint8Array": "Uint8List",
+        "Int32Array": "Int32List",
         "ArrayBufferView": "List",
         "DataArray": "ByteBuffer",
         "IndicesArray": "Int32List",
@@ -26,9 +27,20 @@ export const config = <Config>{
         "Nullable<#1>": "#1",
         "Array<#1>": "List<#1>",
         "Partial<#1>": "#1",
+        "ClientRect": "Rectangle",
+        "WebGLProgram": "Program",
+        "WebGLTransformFeedback": "TransformFeedback",
+        "WebGLQuery": "Query",
+        "WebGLBuffer": "Buffer",
+        "WebGLUniformLocation": "UniformLocation",
+        "WebGLRenderingContext": "RenderingContext",
+        "WebGLContextEvent": "ContextEvent",
+        "WebGLVertexArrayObject": "VertexArrayObject",
+        "HTMLCanvasElement": "CanvasElement",
         "HTMLElement": "HtmlElement",
         "HTMLImageElement": "ImageElement",
         "HTMLButtonElement": "ButtonElement",
+        "HTMLVideoElement": "VideoElement",
         "PointerEventInit": "dynamic", // interface for type literal defined by typescript dom lib
     },
     secondLevelConfigs: {
@@ -60,6 +72,7 @@ export const config = <Config>{
             ]
         },
         ActionManager: {},
+        AlphaState: {},
         Analyser: {
             include: [] // not yet generated 
         },
@@ -122,8 +135,10 @@ export const config = <Config>{
         DataBuffer: {},
         DebugLayer: {},
         DebugLayerTab: {},
+        DepthCullingState: {},
         DepthRenderer: {},
         DepthSortedParticle: {},
+        DepthTextureCreationOptions: {},
         DetailMapConfiguration: {
             include: []
         },
@@ -136,6 +151,20 @@ export const config = <Config>{
         },
         EffectFallbacks: {},
         EffectLayer: {},
+        Engine: {
+            exclude: [
+                "startTimeQuery", // not yet generated
+                "endTimeQuery", // not yet generated
+            ]
+        },
+        EngineCapabilities: {
+            exclude: [
+                "s3tc", // not yet supported
+                "textureAnisotropicFilterExtension", // not yet supported
+                "timerQuery", // not yet supported
+            ]
+        },
+        EngineView: {},
         EnvironmentHelper: {
             include: [] // not yet generated
         },
@@ -166,16 +195,20 @@ export const config = <Config>{
         GroundMesh: {},
         HemisphericLight: {},
         HighlightLayer: {},
+        HostInformation: {},
         IAction: {},
         IActionEvent: {},
         IAnimatable: {},
+        IAudioEngine: {},
         IBehaviorAware: {},
         IClipPlanesHolder: {},
         ICollisionCoordinator: {},
         IColor4Like: {},
         ICreateCapsuleOptions: {},
         ICullable: {},
+        ICustomAnimationFrameRequester: {},
         ICustomShaderNameResolveOptions: {},
+        IDisplayChangedEventArgs: {},
         IDisposable: {},
         IEasingFunction: {},
         IEdgesRendererOptions: {},
@@ -190,9 +223,10 @@ export const config = <Config>{
         IImageProcessingConfigurationDefines: {},
         IInspectable: {},
         IInspectorOptions: {
-            treatAsTypeLiteral: true,
+            treatAsObjectLiteral: true,
         },
         IIOptionShadowDepthMaterial: {},
+        ILoadingScreen: {},
         IMaterialAnisotropicDefines: {},
         IMaterialBRDFDefines: {},
         IMaterialClearCoatDefines: {},
@@ -209,6 +243,7 @@ export const config = <Config>{
         InternalTextureSource: {},
         IntersectionInfo: {},
         InternalTexture: {},
+        InstancingAttributeInfo: {},
         IOfflineProvider: {},
         IPhysicsEnabledObject: {
             exclude: [
@@ -220,9 +255,11 @@ export const config = <Config>{
         IPhysicsEnginePlugin: {
             include: [] // CannonJSPlugin does not implement many methods
         },
+        IPipelineContext: {},
         IPlaneLike: {},
         IRenderingManagerAutoClearSetup: {},
         ISceneComponent: {},
+        ISceneLike: {},
         IShadowGenerator: {
             exclude: [
                 "forceCompilation", // mix of replaceType() and type literal
@@ -240,6 +277,11 @@ export const config = <Config>{
         ISoundTrackOptions: {},
         ISpriteManager: {},
         IVector3Like: {},
+        IViewportLike: {},
+        IViewportOwnerLike: {
+            forceExport: true
+        },
+        IVRPresentationAttributes: {},
         KeyboardInfo: {},
         KeyboardInfoPre: {},
         Layer: {},
@@ -301,6 +343,16 @@ export const config = <Config>{
                 "getHierarchyBoundingVectors", // not yet generated
             ]
         },
+        NullEngine: {
+            exclude: [
+                "updateDynamicTexture", // invalid override
+                "updateDynamicIndexBuffer", // invalid override
+                "updateDynamicVertexBuffer", // invalid override
+            ]
+        },
+        NullEngineOptions: {
+            treatAsObjectLiteral: true
+        },
         Observable: {},
         Observer: {},
         Octree: {},
@@ -323,6 +375,7 @@ export const config = <Config>{
         PBRSpecularGlossinessMaterial: {},
         PBRSubSurfaceConfiguration: {},
         PerfCounter: {},
+        PerformanceMonitor: {},
         PhysicsImpostor: {
             exclude: [
                 "onCollide", // not yet generated
@@ -330,7 +383,7 @@ export const config = <Config>{
         },
         PhysicsImpostorJoint: {},
         PhysicsImpostorParameters: {
-            treatAsTypeLiteral: true
+            treatAsObjectLiteral: true
         },
         PhysicsJoint: {},
         PhysicsJointData: {},
@@ -418,6 +471,7 @@ export const config = <Config>{
         },
         StandardMaterial: {},
         StandardMaterialDefines: {},
+        StencilState: {},
         SubMesh: {
             exclude: [
                 "intersects", // function type 
@@ -435,7 +489,15 @@ export const config = <Config>{
         TargetCamera: {},
         Texture: {},
         ThinEngine: {
-            include: [], // not yet generated
+            exclude: [
+                "ExceptionList", // not yet supported
+                "attachContextLostEvent", // method with params as parameter
+                "attachContextRestoredEvent", // method with params as parameter
+                "bindIndexBuffer", // protected modifier
+                "getGlInfo", // object literal as result of a function
+                "framebufferDimensionsObject", // object literal as type param
+                "createRawCubeTextureFromUrl", // method with param as parameter
+            ],
         },
         ThinSprite: {},
         ThinTexture: {},

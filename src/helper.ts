@@ -234,14 +234,19 @@ export const override = (firstLevelName: string, secondLevelName: string, type: 
     return null;
 }
 
-export const treatAsTypeLiteral = (name: string): boolean => {
+export const treatAsObjectLiteral = (name: string): boolean => {
     const secondLevelConfig = config.secondLevelConfigs[name];
-    return secondLevelConfig && secondLevelConfig.treatAsTypeLiteral;
+    return (secondLevelConfig && secondLevelConfig.treatAsObjectLiteral) === true;
+}
+
+export const forceExport = (name: string): boolean => {
+    const secondLevelConfig = config.secondLevelConfigs[name];
+    return (secondLevelConfig && secondLevelConfig.forceExport) === true;
 }
 
 export const convertFunctionPropertiesToFunctions = (name: string): boolean => {
     const secondLevelConfig = config.secondLevelConfigs[name];
-    return secondLevelConfig && secondLevelConfig.convertFunctionPropertiesToFunctions;
+    return (secondLevelConfig && secondLevelConfig.convertFunctionPropertiesToFunctions) === true;
 }
 
 export const methodToFunctionType = (method: Method): FunctionType => {
