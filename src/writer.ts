@@ -27,11 +27,14 @@ class Writer {
 }
 
 const parameterToString = (parameter: Parameter, scope: Scope): string => {
-    const paramScope = <Scope>{
+    var paramScope = <Scope>{
         kind: ScopeKind.parameter,
         name: parameter.name,
         parent: scope
     };
+    if (scope.kind == ScopeKind.setter && scope.name == parameter.name) {
+        paramScope = scope;
+    }
     return typeToString(parameter.type, paramScope) + " " + parameter.name;
 }
 
@@ -191,11 +194,22 @@ const typeLiteralsForClassOrInterface = (clazz: ClassOrInterface): { [key: strin
 
     clazz.setters.forEach(s => {
         if (isTypeLiteralType(s.parameter.type)) {
-            const setterScope = <Scope>{
+            var setterScope = <Scope>{
                 kind: ScopeKind.setter,
-                name: s.name,
-                parent: classScope
+                name: s.parameter.name,
+                parent: <Scope>{
+                    kind: ScopeKind.setter,
+                    name: s.name,
+                    parent: classScope
+                }
             };
+            if (s.name == s.parameter.name) {
+                setterScope = <Scope>{
+                    kind: ScopeKind.setter,
+                    name: s.name,
+                    parent: classScope
+                }
+            }
             result[typeLiteralNameFromScope(setterScope)] = s.parameter.type;
         }
     });
