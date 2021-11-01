@@ -76,6 +76,7 @@ export const config = <Config>{
         Analyser: {
             include: [] // not yet generated 
         },
+        Angle: {},
         Animatable: {},
         AnimationPropertiesOverride: {},
         ArcRotateCamera: {
@@ -88,6 +89,16 @@ export const config = <Config>{
             ]
         },
         AutoRotationBehavior: {},
+        AxisDragGizmo: {
+            exclude: [
+                "onSnapObservable" // object literal as type parameter
+            ]
+        },
+        AxisScaleGizmo: {
+            exclude: [
+                "onSnapObservable" // object literal as type parameter
+            ]
+        },
         Bone: {
             include: [
                 "constructor"
@@ -99,6 +110,15 @@ export const config = <Config>{
         Behavior: {},
         BouncingBehavior: {},
         BoundingBox: {},
+        BoundingBoxGizmo: {
+            exclude: [
+                "onDragStartObservable", // type not yet generated
+                "onScaleBoxDragObservable", // type not yet generated
+                "onScaleBoxDragEndObservable", // type not yet generated
+                "onRotationSphereDragObservable", // type not yet generated
+                "onRotationSphereDragEndObservable", // type not yet generated
+            ]
+        },
         BoundingBoxRenderer: {},
         BoundingInfo: {},
         BoundingSphere: {},
@@ -143,6 +163,7 @@ export const config = <Config>{
             include: []
         },
         DirectionalLight: {},
+        DynamicTexture: {},
         EasingFunction: {},
         Effect: {
             include: [
@@ -189,6 +210,9 @@ export const config = <Config>{
             ]
         },
         GeometryBufferRenderer: {},
+        Gizmo: {},
+        GizmoAxisCache: {},
+        GizmoManager: {},
         GlowLayer: {},
         GLTFData: {},
         GLTF2Export: {},
@@ -402,11 +426,34 @@ export const config = <Config>{
         },
         PickingInfo: {},
         Plane: {},
+        PlaneDragGizmo: {
+            exclude: [
+                "onSnapObservable" // object literal as type parameter
+            ]
+        },
+        PlaneRotationGizmo: {
+            exclude: [
+                "onSnapObservable" // object literal as type parameter
+            ]
+        },
+        PointerDragBehavior: {
+            exclude: [
+                "onDragObservable", // object literal as type parameter
+                "onDragStartObservable", // object literal as type parameter
+                "onDragEndObservable", // object literal as type parameter
+            ]
+        },
         PointerEventTypes: {},
         PointerInfo: {},
         PointerInfoBase: {},
         PointerInfoPre: {},
         PointLight: {},
+        PositionGizmo: {
+            exclude: [
+                "onDragStartObservable",
+                "onDragEndObservable",
+            ]
+        },
         PostProcess: {
             include: []
         },
@@ -437,8 +484,20 @@ export const config = <Config>{
                 "getCustomRenderList", // not yet generated
             ]
         },
+        RotationGizmo: {
+            exclude: [
+                "onDragStartObservable", // unknown type parameter
+                "onDragEndObservable", // unknown type parameter
+            ]
+        },
         RuntimeAnimation: {},
         Scalar: {},
+        ScaleGizmo: {
+            exclude: [
+                "onDragStartObservable", // unknown type parameter
+                "onDragEndObservable", // unknown type parameter
+            ]
+        },
         Scene: {
             exclude: [
                 "getWorldExtends", // bug in type literal naming for a return type
@@ -455,6 +514,12 @@ export const config = <Config>{
         ShadowDepthWrapper: {},
         ShadowLight: {},
         SimplificationQueue: {},
+        SixDofDragBehavior: {
+            exclude: [
+                "onDragStartObservable", // unknown type parameter
+                "onDragEndObservable", // unknown type parameter
+            ]
+        },
         SmartArray: {},
         SmartArrayNoDuplicate: {},
         SolidParticle: {},
@@ -512,6 +577,7 @@ export const config = <Config>{
         ThinTexture: {},
         TransformNode: {},
         UniformBuffer: {},
+        UtilityLayerRenderer: {},
         Vector2: {},
         Vector3: {},
         Vector4: {},

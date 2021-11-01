@@ -121,8 +121,10 @@ const fixParamTypesOfFixedInvalidOverrides = (parameters: Parameter[], clazz: Cl
             if (isTypeType(type)) {
                 const newType = replaceType(type, null, mapToObject(typeReplaceMap, true)) as TypeType;
                 if (newType) {
-                    type.name = newType.name;
-                    type.typeParameters = newType.typeParameters;
+                    // TODO dont't really know why a copy is required here
+                    param.type = <TypeType>{
+                        ...newType
+                    };
                 }
             }
         }
@@ -170,7 +172,8 @@ const fixInvalidOverrides = (library: Library): void => {
                     if (clazzMethod.name === interfazeMethod.name) {
                         clazzMethod.parameters = [];
                         for (const param of interfazeMethod.parameters) {
-                            clazzMethod.parameters.push(Object.assign({}, param));
+                            // clazzMethod.parameters.push(Object.assign({}, param));
+                            clazzMethod.parameters.push({ ...param });
                         }
                         for (const param of clazzMethod.parameters) {
                             fixParamTypesOfFixedInvalidOverrides(clazzMethod.parameters, clazz, library);
