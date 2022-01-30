@@ -217,6 +217,24 @@ const removeDuplicateMethods = (library: Library) => {
     }
 }
 
+const removeDuplicateTypeAliases = (library: Library) => {
+    library.functionAliases = library.functionAliases.filter((a1, i1) => {
+        for (let i2 = i1; i2 < library.functionAliases.length; i2++) {
+            if (i1 !== i2) {
+                const a2 = library.functionAliases[i2];
+                if (a1.name === a2.name) {
+                    if (a1.parameters.map(p => p.name).join(";") === a2.parameters.map(p => p.name).join(";")) {
+                        return false;
+                    } else {
+                        throw Error("Found at least 2 function type aliases with same name and different signatures! Name:" + a1.name + ", first signature: " + a1.parameters.map(p => p.name).join(";") + ", second signature: " + a2.parameters.map(p => p.name).join(";"));
+                    }
+                }
+            }
+        }
+        return true;
+    });
+}
+
 export const sanitizeLibrary = (library: Library): Library => {
     convertClassPropertiesToGettersAndSetters(library);
     convertInterfaceFunctionPropertiesToFunctions(library);
@@ -225,5 +243,6 @@ export const sanitizeLibrary = (library: Library): Library => {
     addRequiredNoParamConstructorsToExtendedClasses(library);
     fixInvalidOverrides(library);
     removeDuplicateMethods(library);
+    removeDuplicateTypeAliases(library);
     return library;
 }

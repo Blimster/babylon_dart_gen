@@ -2,6 +2,7 @@ import * as ts from "typescript";
 import { Class, Constructor, Parameter, Getter, Setter, Method, Library, Type, TypeType, TypeKind, FunctionType, TypeLiteralType, Property, Interface, Enum } from "./model";
 import { config } from "./config";
 import { forceExport, includeTopLevel, isTypeLiteralType, isTypeType } from "./helper";
+import { notStrictEqual } from "assert";
 
 const isExported = (node: ts.Node): boolean => {
     return (
@@ -234,23 +235,29 @@ const parseMethods = (node: ts.Node, checker: ts.TypeChecker, debug?: boolean): 
     const result: Method[] = [];
     node.forEachChild(n => {
         if (ts.isMethodDeclaration(n) || ts.isMethodSignature(n)) {
-            if (!isHidden(n.name.getText())) {
-                const symbol = checker.getSymbolAtLocation(n.name);
-                result.push({
-                    name: n.name.getText(),
-                    modifiers: n.modifiers ? n.modifiers.filter(m => m.getText() !== "abstract").map(m => m.getText()) : [],
-                    returnType: parseType(n.type, checker),
-                    parameters: parseParameters(n.parameters, checker),
-                    doc: ts.displayPartsToString(symbol.getDocumentationComment(checker))
-                });
-            }
-        } else {
-            if (debug) {
-                console.log(n.kind);
+            const method = parseMethod(n, checker);
+            if (method) {
+                result.push(method);
             }
         }
     });
     return result;
+}
+
+const parseMethod = (node: ts.MethodDeclaration | ts.MethodSignature | ts.SignatureDeclarationBase, checker: ts.TypeChecker, fallbackName: string = null): Method => {
+    var name = fallbackName;
+    if(node.name) {
+        name = node.name.getText();
+    }
+    if (!isHidden(name)) {
+        return {
+            name,
+            modifiers: node.modifiers ? node.modifiers.filter(m => m.getText() !== "abstract").map(m => m.getText()) : [],
+            returnType: parseType(node.type, checker),
+            parameters: parseParameters(node.parameters, checker),
+            doc: "TODO"
+        };
+    }
 }
 
 const parseClass = (node: ts.ClassDeclaration, checker: ts.TypeChecker): Class => {
@@ -370,7 +377,15 @@ const parseNode = (node: ts.Node, checker: ts.TypeChecker, library: Library): vo
         if (enm) {
             library.enums.push(enm);
         }
-    } else {
+    } else if (ts.isTypeAliasDeclaration(node)) {
+        const name = node.name;
+        const type = node.type;
+        if (ts.isFunctionTypeNode(type)) {
+           const method = parseMethod(type, checker, name.getText()); 
+           library.functionAliases.push(method);
+        }
+    }
+    else {
         ts.forEachChild(node, (n) => parseNode(n, checker, library));
     }
 
@@ -389,6 +404,7 @@ export const parseLibraries = (): Library => {
         classes: [],
         interfaces: [],
         enums: [],
+        functionAliases: []
     };
     for (const sourceFile of sourceFiles) {
         if (config.fileNames.filter(f => sourceFile.fileName.indexOf(f) !== -1).length > 0) {

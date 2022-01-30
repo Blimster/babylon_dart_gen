@@ -65,8 +65,8 @@ const writeConstructor = (ctor: Constructor, scope: Scope, writer: Writer): void
     }
 }
 
-const writeMethod = (method: Method, external: boolean, scope: Scope, writer: Writer): void => {
-    if (includeSecondLevel(firstScopeOfKind(scope, ScopeKind.clazz).name, filterItemFromMethod(method))) {
+const writeMethod = (method: Method, external: boolean, scope: Scope, scopeKind: ScopeKind, writer: Writer): void => {
+    if (includeSecondLevel(firstScopeOfKind(scope, scopeKind).name, filterItemFromMethod(method))) {
         const methodScope = <Scope>{
             kind: ScopeKind.function,
             name: method.name,
@@ -300,7 +300,7 @@ const writeClass = (library: Library, clazz: Class, writer: Writer): void => {
     writeProperties(clazz.properties, scope, writer);
     writeGettersAndSetters(library, clazz, scope, writer);
     for (const method of clazz.methods) {
-        writeMethod(method, true, scope, writer);
+        writeMethod(method, true, scope, ScopeKind.clazz, writer);
     }
     // interface merging
     const extraPropertiesAndMethods: string[] = [];
@@ -322,7 +322,7 @@ const writeClass = (library: Library, clazz: Class, writer: Writer): void => {
             for (const method of interfaze.methods) {
                 if (extraPropertiesAndMethods.indexOf(method.name) === -1) {
                     extraPropertiesAndMethods.push(method.name);
-                    writeMethod(method, true, scope, writer);
+                    writeMethod(method, true, scope, ScopeKind.clazz, writer);
                 }
             }
         }
@@ -375,7 +375,7 @@ const writeInterface = (library: Library, interfaze: Interface, writer: Writer):
             writeProperties(interfaze.properties, scope, writer);
             writeGettersAndSetters(library, interfaze, scope, writer);
             for (const method of interfaze.methods) {
-                writeMethod(method, false, scope, writer);
+                writeMethod(method, false, scope, ScopeKind.clazz, writer);
             }
             writer.writeLine("}");
         }
@@ -396,6 +396,22 @@ const writeEnum = (library: Library, enm: Enum, writer: Writer): void => {
     writer.toFile();
 }
 
+const writeFunctionAliases = (library: Library, writer: Writer): void => {
+    const scope = <Scope>{
+        kind: ScopeKind.library,
+        name: "__type_alias__"
+    };
+    
+    writer.writeLine("part of " + config.libraryName + ";");
+    writer.writeLine();
+    for (const functionAlias of library.functionAliases) {
+        if (includeSecondLevel(scope.name, filterItemFromMethod(functionAlias))) {
+            writer.writeLine("typedef " + functionAlias.name + " = " + typeToString(functionAlias.returnType, scope) + " Function" + parametersToString(functionAlias.parameters, scope) + ";")
+        }
+    }
+    writer.toFile();
+}
+
 export const writeLibrary = (library: Library): void => {
     for (const clazz of library.classes) {
         writeClass(library, clazz, new Writer(clazz.name.toLowerCase() + ".dart"));
@@ -406,4 +422,5 @@ export const writeLibrary = (library: Library): void => {
     for (const enm of library.enums) {
         writeEnum(library, enm, new Writer(enm.name.toLowerCase() + ".dart"));
     }
+    writeFunctionAliases(library, new Writer("type_aliases.dart"));
 }

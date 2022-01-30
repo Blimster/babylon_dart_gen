@@ -44,6 +44,14 @@ export const config = <Config>{
         "PointerEventInit": "dynamic", // interface for type literal defined by typescript dom lib
     },
     secondLevelConfigs: {
+        __type_alias__: {
+            exclude: [
+                "RenderingMeshStageAction", // not yet generated
+                "WebXRFeatureConstructor", // not yet generated
+                "MotionControllerConstructor", // not yet generated
+                "XRFrameRequestCallback", // not yet generated
+            ]
+        },
         AbstractActionManager: {
             exclude: [
                 "Triggers", // type literal not generated
@@ -501,8 +509,6 @@ export const config = <Config>{
         Scene: {
             exclude: [
                 "getWorldExtends", // bug in type literal naming for a return type
-                "pick", // function type
-                "pickWithRay", // function type
                 "multiPick", // function type
                 "multiPickWithRay", // function type
                 "addExternalData", // function with type parameters

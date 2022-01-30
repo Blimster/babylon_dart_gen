@@ -102,9 +102,11 @@ export interface Library {
     classes: Class[];
     interfaces: Interface[];
     enums: Enum[];
+    functionAliases: Method[];
 }
 
 export enum ScopeKind {
+    library,
     clazz,
     function,
     parameter,
